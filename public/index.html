@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parqueo Quilla | Caja</title>
+  <link rel="stylesheet" href="/estilos.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Parqueo Quilla</h1>
+      <p>Operaciones de caja · hora de Lima</p>
+      <nav aria-label="Operaciones">
+        <a href="#liquidacion">Liquidar</a>
+        <a href="#importacion">Importar CSV</a>
+        <a href="#cierre">Cierre de caja</a>
+      </nav>
+    </header>
+
+    <section id="liquidacion" aria-labelledby="titulo-liquidacion">
+      <h2 id="titulo-liquidacion">Liquidar ticket</h2>
+      <form id="form-liquidar">
+        <div class="campos">
+          <label>Ticket <input name="ticket" placeholder="T-1001" required></label>
+          <label>Vehículo
+            <select name="tipo">
+              <option value="AUTO">Auto</option>
+              <option value="MOTO">Moto</option>
+            </select>
+          </label>
+          <label>Entrada <input type="datetime-local" name="entrada" required></label>
+          <label>Salida <input type="datetime-local" name="salida" required></label>
+        </div>
+        <label class="check"><input type="checkbox" name="ticket_perdido"> Ticket perdido</label>
+        <button>Calcular y guardar</button>
+      </form>
+      <p id="estado-liquidar" role="status"></p>
+      <div id="resultado-liquidar" hidden>
+        <p><strong id="total-liquidar"></strong> <span id="minutos-liquidar"></span></p>
+        <table>
+          <thead><tr><th>Concepto</th><th>Artículo</th><th>Monto</th></tr></thead>
+          <tbody id="detalle-liquidar"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="importacion" aria-labelledby="titulo-importacion">
+      <h2 id="titulo-importacion">Importar CSV legado</h2>
+      <form id="form-importar">
+        <label>Archivo CSV <input type="file" name="archivo" accept=".csv,text/csv" required></label>
+        <button>Importar tickets</button>
+      </form>
+      <p id="estado-importar" role="status"></p>
+      <div id="resultado-importar" hidden>
+        <table>
+          <caption>Aceptadas</caption>
+          <thead><tr><th>Ticket</th><th>Total</th></tr></thead>
+          <tbody id="aceptadas"></tbody>
+        </table>
+        <table>
+          <caption>Rechazadas</caption>
+          <thead><tr><th>Fila</th><th>Ticket</th><th>Motivo</th></tr></thead>
+          <tbody id="rechazadas"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="cierre" aria-labelledby="titulo-cierre">
+      <h2 id="titulo-cierre">Cierre de caja</h2>
+      <form id="form-cierre">
+        <label>Fecha de salida <input type="date" name="fecha" required></label>
+        <button>Consultar cierre</button>
+      </form>
+      <p id="estado-cierre" role="status"></p>
+      <div id="resultado-cierre" hidden>
+        <table>
+          <thead><tr><th>Concepto</th><th>Resultado</th></tr></thead>
+          <tbody id="detalle-cierre"></tbody>
+        </table>
+        <p>Los tickets perdidos también están incluidos en el subtotal de su tipo de vehículo.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
