@@ -20,6 +20,21 @@ Las 22 pruebas cubren los doce artículos, las dos adendas, el Anexo A y los cin
 
 En Windows, si PowerShell bloquea el script `npm.ps1`, usa `npm.cmd start` o `npm.cmd test`.
 
+## Organización del código
+
+| Archivo | Responsabilidad |
+| --- | --- |
+| `src/server.js` | Arranque del servidor, rutas, recursos de la interfaz y respuesta de errores. |
+| `src/http.js` | Lectura de JSON y multipart, límite del cuerpo HTTP y serialización de respuestas. |
+| `src/operaciones.js` | Validación de solicitudes de negocio y coordinación entre cálculo y guardado. |
+| `src/tarifa.js` | Motor tarifario independiente de HTTP y SQLite. |
+| `src/fechas.js` | Conversión a Lima y validación del calendario. |
+| `src/importacion.js` | Lectura del CSV, resolución de duplicados y validación por fila. |
+| `src/tickets.js` | Persistencia SQLite, transacciones y consulta de caja. |
+| `public/` | Navegación de las tres vistas, formularios y presentación de resultados. |
+
+La interfaz usa una navegación lateral que se adapta a móvil. La liquidación muestra un comprobante con el total y los artículos aplicados. La importación distingue aceptadas y rechazadas, y el cierre presenta el total y la distribución por vehículo y por tickets perdidos. Los datos recibidos se insertan como texto en la página.
+
 ## Demostración
 
 1. Liquida un AUTO con ticket `DEMO-1`, entrada el 12/10/2026 a las 10:00 y salida a las 11:20. Verás 80 minutos y S/ 9.00.

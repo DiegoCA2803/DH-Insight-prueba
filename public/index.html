@@ -3,85 +3,122 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173f41">
   <title>Parqueo Quilla | Caja</title>
   <link rel="stylesheet" href="/estilos.css">
   <script type="module" src="/app.js"></script>
 </head>
 <body>
-  <main>
-    <header>
-      <h1>Parqueo Quilla</h1>
-      <p>Operaciones de caja · hora de Lima</p>
-      <nav aria-label="Operaciones">
-        <a href="#liquidacion">Liquidar</a>
-        <a href="#importacion">Importar CSV</a>
-        <a href="#cierre">Cierre de caja</a>
+  <svg class="iconos" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M4 4h16v5a3 3 0 0 0 0 6v5H4v-5a3 3 0 0 0 0-6V4Z"/><path d="M14 4v3m0 3v4m0 3v3"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></symbol>
+    <symbol id="i-caja" viewBox="0 0 24 24"><path d="M4 8h16v12H4zM8 8V4h8v4m-8 5h8m-8 3h3"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+  </svg>
+  <a class="saltar" href="#contenido">Ir al contenido</a>
+  <aside class="barra-lateral">
+    <a class="marca" href="#liquidacion" aria-label="Quilla, inicio">
+      <span class="simbolo-parqueo" aria-hidden="true">P<span></span></span>
+      <span>Quilla<small>Estacionamiento</small></span>
+    </a>
+    <div class="menu">
+      <p class="menu-titulo">Tu espacio de trabajo</p>
+      <nav aria-label="Operaciones de caja">
+        <a href="#liquidacion" aria-current="page"><svg class="icono"><use href="#i-ticket"/></svg>Liquidar ticket</a>
+        <a href="#importacion"><svg class="icono"><use href="#i-upload"/></svg>Importar CSV</a>
+        <a href="#cierre"><svg class="icono"><use href="#i-caja"/></svg>Cierre de caja</a>
       </nav>
+    </div>
+    <div class="lateral-pie"><span class="marca-pequena">Q.</span><div>Parqueo Quilla<small>Operaciones de caja</small></div></div>
+  </aside>
+  <div class="aplicacion">
+    <header class="barra-superior">
+      <span>Panel de operaciones</span>
+      <span class="fecha-sistema"><time id="fecha-actual"></time><span class="zona">Hora de Lima</span></span>
     </header>
-
-    <section id="liquidacion" aria-labelledby="titulo-liquidacion">
-      <h2 id="titulo-liquidacion">Liquidar ticket</h2>
-      <form id="form-liquidar">
-        <div class="campos">
-          <label>Ticket <input name="ticket" placeholder="T-1001" required></label>
-          <label>Vehículo
-            <select name="tipo">
-              <option value="AUTO">Auto</option>
-              <option value="MOTO">Moto</option>
-            </select>
-          </label>
-          <label>Entrada <input type="datetime-local" name="entrada" required></label>
-          <label>Salida <input type="datetime-local" name="salida" required></label>
+    <main id="contenido" tabindex="-1">
+      <section id="liquidacion" class="vista" aria-labelledby="titulo-liquidacion">
+        <div class="encabezado-vista">
+          <div><h1 id="titulo-liquidacion">Cada ticket, en orden.</h1><p>Calcula el cobro y registra la salida del vehículo.</p></div>
+          <span class="etiqueta">Liquidación</span>
         </div>
-        <label class="check"><input type="checkbox" name="ticket_perdido"> Ticket perdido</label>
-        <button>Calcular y guardar</button>
-      </form>
-      <p id="estado-liquidar" role="status"></p>
-      <div id="resultado-liquidar" hidden>
-        <p><strong id="total-liquidar"></strong> <span id="minutos-liquidar"></span></p>
-        <table>
-          <thead><tr><th>Concepto</th><th>Artículo</th><th>Monto</th></tr></thead>
-          <tbody id="detalle-liquidar"></tbody>
-        </table>
-      </div>
-    </section>
+        <div class="distribucion">
+          <div class="panel">
+            <div class="titulo-panel"><svg class="icono"><use href="#i-ticket"/></svg><h2>Datos del ticket</h2></div>
+            <form id="form-liquidar">
+              <div class="campos">
+                <label>Ticket <input name="ticket" placeholder="Ej. T-1001" autocomplete="off" required></label>
+                <label>Tipo de vehículo
+                  <select name="tipo"><option value="AUTO">Auto</option><option value="MOTO">Moto</option></select>
+                </label>
+                <label>Entrada <input type="datetime-local" name="entrada" required></label>
+                <label>Salida <input type="datetime-local" name="salida" required></label>
+              </div>
+              <p class="ayuda">Ingresa las fechas y horas locales de Lima.</p>
+              <label class="opcion-perdido"><input type="checkbox" name="ticket_perdido"><span>El cliente perdió su ticket<small>Se agregará un cargo fijo de S/ 25.00.</small></span></label>
+              <button class="boton principal">Calcular y guardar <svg class="icono"><use href="#i-arrow"/></svg></button>
+            </form>
+            <p id="estado-liquidar" class="estado" role="status"></p>
+            <p class="nota-panel">Si el ticket ya existe, sus datos y su cobro se actualizarán.</p>
+          </div>
+          <aside class="comprobante" aria-label="Resultado del cobro">
+            <div class="comprobante-cabecera"><span class="simbolo-mini" aria-hidden="true">P</span><span>Parqueo Quilla<small>Detalle de liquidación</small></span></div>
+            <div id="vacio-liquidar" class="comprobante-vacio">
+              <svg class="icono grande"><use href="#i-ticket"/></svg>
+              <h2>Tu cobro aparecerá aquí</h2>
+              <p>Completa los datos del ticket para ver el total y cómo se calcula.</p>
+            </div>
+            <div id="resultado-liquidar" hidden>
+              <p class="ticket-referencia" id="ticket-liquidar"></p>
+              <span class="etiqueta-total">Total a cobrar</span>
+              <strong class="importe" id="total-liquidar"></strong>
+              <p class="duracion" id="minutos-liquidar"></p>
+              <div class="tabla-contenedor">
+                <table class="tabla-comprobante"><caption class="solo-lector">Desglose del cobro</caption><thead><tr><th>Concepto y artículo</th><th>Monto</th></tr></thead><tbody id="detalle-liquidar"></tbody></table>
+              </div>
+            </div>
+            <p class="comprobante-pie">Cada cargo incluye el artículo que lo justifica.</p>
+          </aside>
+        </div>
+      </section>
 
-    <section id="importacion" aria-labelledby="titulo-importacion">
-      <h2 id="titulo-importacion">Importar CSV legado</h2>
-      <form id="form-importar">
-        <label>Archivo CSV <input type="file" name="archivo" accept=".csv,text/csv" required></label>
-        <button>Importar tickets</button>
-      </form>
-      <p id="estado-importar" role="status"></p>
-      <div id="resultado-importar" hidden>
-        <table>
-          <caption>Aceptadas</caption>
-          <thead><tr><th>Ticket</th><th>Total</th></tr></thead>
-          <tbody id="aceptadas"></tbody>
-        </table>
-        <table>
-          <caption>Rechazadas</caption>
-          <thead><tr><th>Fila</th><th>Ticket</th><th>Motivo</th></tr></thead>
-          <tbody id="rechazadas"></tbody>
-        </table>
-      </div>
-    </section>
+      <section id="importacion" class="vista" aria-labelledby="titulo-importacion">
+        <div class="encabezado-vista"><div><h1 id="titulo-importacion">Pon tus registros al día.</h1><p>Importa los tickets del sistema anterior y revisa el resultado de cada fila.</p></div><span class="etiqueta">Importación</span></div>
+        <div class="panel">
+          <div class="titulo-panel"><svg class="icono"><use href="#i-upload"/></svg><h2>Archivo de tickets</h2></div>
+          <form id="form-importar">
+            <label class="seleccionar-archivo" for="archivo"><svg class="icono grande"><use href="#i-upload"/></svg><span>Selecciona tu archivo CSV<small>Archivo UTF-8 separado por comas. Hasta 5 MiB.</small></span>
+              <input id="archivo" type="file" name="archivo" accept=".csv,text/csv" required aria-describedby="ayuda-csv">
+            </label>
+            <p class="ayuda" id="ayuda-csv">El archivo debe incluir las columnas ticket, placa, tipo, entrada, salida y perdido.</p>
+            <button class="boton principal">Importar tickets <svg class="icono"><use href="#i-arrow"/></svg></button>
+          </form>
+          <p id="estado-importar" class="estado" role="status"></p>
+        </div>
+        <div id="resultado-importar" hidden>
+          <div class="resumen-importacion"><p><strong id="cantidad-aceptadas">0</strong> filas aceptadas</p><p><strong id="cantidad-rechazadas">0</strong> filas rechazadas</p></div>
+          <div class="panel resultados">
+            <div class="tabla-contenedor"><table><caption>Tickets aceptados</caption><thead><tr><th>Ticket</th><th>Total cobrado</th></tr></thead><tbody id="aceptadas"></tbody></table></div>
+            <div class="tabla-contenedor"><table><caption>Filas rechazadas</caption><thead><tr><th>Fila</th><th>Ticket</th><th>Motivo</th></tr></thead><tbody id="rechazadas"></tbody></table></div>
+          </div>
+        </div>
+        <p class="nota">Para un ticket repetido en el archivo se considera su última fila. Los tickets existentes se actualizan únicamente si la nueva fila es válida.</p>
+      </section>
 
-    <section id="cierre" aria-labelledby="titulo-cierre">
-      <h2 id="titulo-cierre">Cierre de caja</h2>
-      <form id="form-cierre">
-        <label>Fecha de salida <input type="date" name="fecha" required></label>
-        <button>Consultar cierre</button>
-      </form>
-      <p id="estado-cierre" role="status"></p>
-      <div id="resultado-cierre" hidden>
-        <table>
-          <thead><tr><th>Concepto</th><th>Resultado</th></tr></thead>
-          <tbody id="detalle-cierre"></tbody>
-        </table>
-        <p>Los tickets perdidos también están incluidos en el subtotal de su tipo de vehículo.</p>
-      </div>
-    </section>
-  </main>
+      <section id="cierre" class="vista" aria-labelledby="titulo-cierre">
+        <div class="encabezado-vista"><div><h1 id="titulo-cierre">Las cuentas, claras.</h1><p>Consulta lo cobrado según la fecha de salida de los vehículos.</p></div><span class="etiqueta">Cierre de caja</span></div>
+        <div class="panel">
+          <form id="form-cierre" class="form-cierre"><label>Fecha de salida <input type="date" name="fecha" required></label><button class="boton principal">Consultar cierre <svg class="icono"><use href="#i-arrow"/></svg></button></form>
+          <p id="estado-cierre" class="estado" role="status"></p>
+        </div>
+        <div id="resultado-cierre" hidden>
+          <div class="resumen-cierre"><div><p>Total cobrado</p><strong id="total-cierre"></strong><span id="fecha-cierre"></span></div><div class="conteo-cierre"><strong id="cantidad-cierre"></strong><span>tickets registrados</span></div></div>
+          <div class="panel"><div class="titulo-panel"><svg class="icono"><use href="#i-caja"/></svg><h2>Distribución del cobro</h2></div><div class="tabla-contenedor"><table><thead><tr><th>Concepto</th><th>Importe</th></tr></thead><tbody id="detalle-cierre"></tbody></table></div><p class="nota-panel">Los tickets perdidos también están incluidos en el subtotal de su tipo de vehículo.</p></div>
+        </div>
+        <div id="vacio-cierre" class="vacio-cierre"><svg class="icono grande"><use href="#i-caja"/></svg><p>Selecciona una fecha para consultar tu caja.</p></div>
+      </section>
+      <footer class="pie-pagina"><span>Parqueo Quilla</span><span>Cobros en soles peruanos</span></footer>
+    </main>
+  </div>
 </body>
 </html>
