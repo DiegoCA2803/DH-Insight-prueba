@@ -1,5 +1,9 @@
 # Decisiones del reglamento
 
+Las consultas enviadas al evaluador siguen sin respuesta. Se continúa con las interpretaciones de este documento, conforme a la decisión de avanzar tomada por el candidato. Son supuestos de implementación y no aclaraciones oficiales del reglamento.
+
+En particular, un AUTO que entra el 12/10/2026 a las 03:00 y sale a las 11:00 paga S/ 35.00. Sus dos tramos pertenecen al 12/10. Una nueva liquidación válida del mismo ticket sustituye la anterior, incluso si cambia su fecha de salida. En ese caso, el cierre anterior deja de contar el ticket y el nuevo cierre lo incorpora. Una solicitud rechazada conserva íntegro el registro anterior.
+
 | Punto | Interpretación aplicada | Motivo y ejemplo |
 | --- | --- | --- |
 | Arts. 1–2 y E01 | Convierto los instantes a Lima y comparo sus valores completos para detectar una salida anterior. Luego descarto segundos para calcular minutos y tramos. | E01 describe el orden de las marcas. Entrada 10:00:50 y salida 10:00:01 es E01 aunque ambas caigan en el mismo minuto. |

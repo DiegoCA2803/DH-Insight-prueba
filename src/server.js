@@ -66,8 +66,14 @@ async function leerArchivo(req) {
 export function crearServidor({ rutaDb = process.env.DB_PATH || 'data/tickets.sqlite' } = {}) {
   const tickets = abrirTickets(rutaDb);
   const servidor = createServer(async (req, res) => {
-    const { pathname, searchParams } = new URL(req.url, 'http://localhost');
     try {
+      let url;
+      try {
+        url = new URL(req.url, 'http://localhost');
+      } catch {
+        throw new ErrorRegla('E05', 'URL de solicitud inválida');
+      }
+      const { pathname, searchParams } = url;
       if (req.method === 'POST' && pathname === '/api/liquidaciones') {
         const datos = await leerTicket(req);
         const resultado = calcularLiquidacion(datos);

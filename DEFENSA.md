@@ -1,5 +1,7 @@
 # Preparación para la defensa
 
+Las consultas siguen pendientes de respuesta. Durante la defensa se explican como interpretaciones propias documentadas en DECISIONES.md.
+
 ## Preguntas para enviar antes del día 3
 
 Estas preguntas piden aclaraciones sobre casos en los que dos lecturas producen cobros o registros distintos. La última columna recoge la interpretación aplicada mientras llega una respuesta.
@@ -7,6 +9,7 @@ Estas preguntas piden aclaraciones sobre casos en los que dos lecturas producen 
 | Pregunta para el evaluador | De dónde sale y por qué importa | Implementación actual |
 | --- | --- | --- |
 | Un AUTO entra el 12/10 a las 03:00 y sale a las 11:00. ¿Los S/ 10 nocturnos se imputan al 11/10, cuando comenzó la franja, o al 12/10, cuando empezó el tramo del ticket? | Arts. 3 y 7. Con la fecha del tramo se cobran S/ 35 por el tope. Con la fecha de la franja serían S/ 40. | [`tramos()`](src/tarifa.js) usa la fecha de las 03:00. |
+| Si se liquida o importa un ticket que ya existe en la base, ¿se actualiza o se rechaza? | La regla de duplicados solo describe repeticiones dentro de un archivo. Cambiar una salida puede trasladar el ticket a otro cierre. | [`guardar()`](src/tickets.js) actualiza el registro existente mediante su clave única. Las operaciones rechazadas no lo modifican. |
 | Si la entrada es 10:00:50 y la salida 10:00:01, ¿corresponde E01 aunque ambas marcas se reduzcan a 10:00? | Art. 2 y contrato E01. Validar después del truncamiento podría aceptar una salida anterior y guardarla en caja. | [`calcularLiquidacion()`](src/tarifa.js) compara primero los instantes. |
 | Si la última fila de un ticket repetido es inválida, ¿se descartan todas las anteriores aunque una sea válida? Si ya existía en caja, ¿se mantiene su cobro? | Sección «Ticket repetido» del CSV y persistencia. Determina si el cierre conserva, reemplaza o elimina un cobro. | [`procesarCsv()`](src/importacion.js) conserva la última fila para validar. [`guardar()`](src/tickets.js) solo escribe las aceptadas. |
 | Para un ticket perdido desde el 01/10, si las marcas quedan en el mismo minuto después de descartar segundos, ¿se cobra solo S/ 25 o también una primera hora o tarifa nocturna? | Arts. 2–6, Art. 10 y Adenda 2. La adenda elimina la tolerancia para perdidos y deja abierto cómo tratar un tramo de duración cero. | [`tramos()`](src/tarifa.js) genera tramos de duración positiva. El resultado es S/ 25. |

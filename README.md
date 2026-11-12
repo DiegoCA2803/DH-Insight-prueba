@@ -16,7 +16,7 @@ Abre [http://localhost:3000](http://localhost:3000). Node trae SQLite integrado 
 npm test
 ```
 
-Hay pruebas de los doce artículos, las dos adendas, el Anexo A, los cinco ejemplos públicos y una prueba HTTP que importa el CSV oficial, valida el cierre en Lima y vuelve a abrir la base después de apagar el servidor.
+Las 22 pruebas cubren los doce artículos, las dos adendas, el Anexo A y los cinco ejemplos públicos. Las pruebas HTTP importan el CSV oficial, validan el cierre en Lima y vuelven a abrir la base después de apagar el servidor. También comprueban la corrección de un ticket existente, su traslado entre cierres y la conservación del cobro anterior cuando una corrección se rechaza. Una prueba adicional verifica la reversión completa de una transacción que falla a mitad del lote.
 
 En Windows, si PowerShell bloquea el script `npm.ps1`, usa `npm.cmd start` o `npm.cmd test`.
 
@@ -58,6 +58,8 @@ Envía el CSV UTF-8 como `multipart/form-data` en el campo `archivo`. El límite
 ```
 
 La fila es la línea física en la que empieza el registro, contando la cabecera como línea 1. Los duplicados se resuelven antes de validar y se conserva la última fila del archivo por ticket. En ambos endpoints de escritura, una operación aceptada con un identificador existente actualiza ese ticket.
+
+Las consultas al evaluador siguen sin respuesta. El comportamiento de duplicados y la asignación de fecha a los tramos nocturnos se mantienen como supuestos documentados en DECISIONES.md. Si una corrección válida cambia la fecha de salida en Lima, el ticket se traslada al nuevo cierre. Una corrección rechazada conserva el cobro anterior.
 
 ### GET /api/cierre?fecha=2026-10-12
 

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
+import { request } from 'node:http';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -12,6 +13,7 @@ async function abrir(rutaDb) {
   await once(servidor, 'listening');
   const base = 'http://127.0.0.1:' + servidor.address().port;
   return {
+    base,
     pedir: (ruta, opciones) => fetch(base + ruta, opciones),
     parar: () => new Promise((resolver, rechazar) =>
       servidor.close((error) => error ? rechazar(error) : resolver())),
@@ -77,6 +79,93 @@ test('API: ejemplos CSV, cierre en Lima, actualización sin duplicar y persisten
     await app.parar();
     await rm(carpeta, { recursive: true, force: true });
   }
+});
+
+test('API: corregir por JSON y CSV mantiene una sola liquidación y traslada el cierre', async (t) => {
+  const app = await abrir(':memory:');
+  t.after(() => app.parar());
+  const original = await liquidar(app, {
+    ticket: 'CORRECCION', entrada: '2026-10-12 08:15', salida: '2026-10-12 11:40',
+  });
+  assert.equal(original.status, 200);
+  assert.equal((await original.json()).total_centimos, 2100);
+
+  const corregida = await liquidar(app, {
+    ticket: 'CORRECCION', entrada: '2026-10-12 08:15', salida: '2026-10-12 12:10',
+  });
+  assert.equal(corregida.status, 200);
+  assert.equal((await corregida.json()).total_centimos, 2400);
+  const cierreCorregido = await app.pedir('/api/cierre?fecha=2026-10-12');
+  assert.deepEqual(await cierreCorregido.json(), {
+    cantidad: 1, total_centimos: 2400, por_tipo: { AUTO: 2400, MOTO: 0 },
+    tickets_perdidos_centimos: 0,
+  });
+
+  const importada = await importar(app, [
+    'ticket,placa,tipo,entrada,salida,perdido',
+    'CORRECCION,ABC,MOTO,2026-10-13 08:15,2026-10-13 09:15,SI',
+  ].join('\n'));
+  assert.equal(importada.status, 200);
+  assert.deepEqual((await importada.json()).aceptadas, [{ ticket: 'CORRECCION', total_centimos: 2800 }]);
+  const cierreAnterior = await app.pedir('/api/cierre?fecha=2026-10-12');
+  assert.equal((await cierreAnterior.json()).cantidad, 0);
+  const cierreNuevo = await app.pedir('/api/cierre?fecha=2026-10-13');
+  assert.deepEqual(await cierreNuevo.json(), {
+    cantidad: 1, total_centimos: 2800, por_tipo: { AUTO: 0, MOTO: 2800 },
+    tickets_perdidos_centimos: 2800,
+  });
+});
+
+test('API: última fila inválida y corrección JSON rechazada conservan el cobro existente', async (t) => {
+  const app = await abrir(':memory:');
+  t.after(() => app.parar());
+  const original = await liquidar(app);
+  await original.json();
+  const importada = await importar(app, [
+    'ticket,placa,tipo,entrada,salida,perdido',
+    'T-ZONA,ABC,AUTO,2026-10-13 09:00,2026-10-13 10:00,NO',
+    'T-ZONA,ABC,AUTO,2026-10-13 09:00,,NO',
+    'NUEVO,ABC,AUTO,2026-10-13 09:00,2026-10-13 10:00,NO',
+  ].join('\n'));
+  const reporte = await importada.json();
+  assert.deepEqual(reporte.aceptadas, [{ ticket: 'NUEVO', total_centimos: 600 }]);
+  assert.deepEqual(reporte.rechazadas.map(({ fila, ticket, codigo }) => ({ fila, ticket, codigo })),
+    [{ fila: 3, ticket: 'T-ZONA', codigo: 'E03' }]);
+  const rechazada = await liquidar(app, { salida: '' });
+  assert.equal(rechazada.status, 422);
+  assert.equal((await rechazada.json()).codigo, 'E03');
+  const anterior = await app.pedir('/api/cierre?fecha=2026-10-12');
+  assert.equal((await anterior.json()).total_centimos, 1000);
+  const nuevo = await app.pedir('/api/cierre?fecha=2026-10-13');
+  assert.equal((await nuevo.json()).total_centimos, 600);
+});
+
+test('API: solicitudes malformadas devuelven error sin detener el servidor', async (t) => {
+  const app = await abrir(':memory:');
+  t.after(() => app.parar());
+  const malformada = await new Promise((resolver, rechazar) => {
+    const req = request(app.base, { path: 'http://[' }, (res) => {
+      const partes = [];
+      res.on('data', (parte) => partes.push(parte));
+      res.on('end', () => resolver({ status: res.statusCode, cuerpo: JSON.parse(Buffer.concat(partes)) }));
+      res.on('error', rechazar);
+    });
+    req.on('error', rechazar);
+    req.end();
+  });
+  assert.equal(malformada.status, 422);
+  assert.equal(malformada.cuerpo.codigo, 'E05');
+  const jsonInvalido = await app.pedir('/api/liquidaciones', {
+    method: 'POST', body: '{', headers: { 'Content-Type': 'application/json' },
+  });
+  assert.equal(jsonInvalido.status, 422);
+  assert.equal((await jsonInvalido.json()).codigo, 'E05');
+  const sinArchivo = await app.pedir('/api/importaciones', { method: 'POST', body: new FormData() });
+  assert.equal(sinArchivo.status, 422);
+  assert.equal((await sinArchivo.json()).codigo, 'E05');
+  const normal = await liquidar(app);
+  assert.equal(normal.status, 200);
+  assert.equal((await normal.json()).total_centimos, 1000);
 });
 
 test('API: errores 422 uniformes y solo la última fila CSV se valida', async (t) => {
