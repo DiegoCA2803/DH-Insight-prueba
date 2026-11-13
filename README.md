@@ -16,7 +16,7 @@ Abre [http://localhost:3000](http://localhost:3000). Node trae SQLite integrado 
 npm test
 ```
 
-Las 22 pruebas cubren los doce artículos, las dos adendas, el Anexo A y los cinco ejemplos públicos. Las pruebas HTTP importan el CSV oficial, validan el cierre en Lima y vuelven a abrir la base después de apagar el servidor. También comprueban la corrección de un ticket existente, su traslado entre cierres y la conservación del cobro anterior cuando una corrección se rechaza. Una prueba adicional verifica la reversión completa de una transacción que falla a mitad del lote.
+Las 29 pruebas cubren los doce artículos, las dos adendas, el Anexo A y los cinco ejemplos públicos. Las pruebas HTTP importan el CSV oficial, validan el cierre en Lima y vuelven a abrir la base después de apagar el servidor. También comprueban la corrección de un ticket existente, su traslado entre cierres y la conservación del cobro anterior cuando una corrección se rechaza. Una prueba adicional verifica la reversión completa de una transacción que falla a mitad del lote.
 
 En Windows, si PowerShell bloquea el script `npm.ps1`, usa `npm.cmd start` o `npm.cmd test`.
 
@@ -72,9 +72,9 @@ Envía el CSV UTF-8 como `multipart/form-data` en el campo `archivo`. El límite
 }
 ```
 
-La fila es la línea física en la que empieza el registro, contando la cabecera como línea 1. Los duplicados se resuelven antes de validar y se conserva la última fila del archivo por ticket. En ambos endpoints de escritura, una operación aceptada con un identificador existente actualiza ese ticket.
+La fila es la línea física en la que empieza el registro, contando la cabecera como línea 1. Se valida cada fila y se conserva la última válida de cada ticket. Las inválidas se reportan con su número de fila y motivo, incluso cuando otra fila del mismo ticket se acepta. Las válidas sustituidas no se cuentan como rechazadas. En ambos endpoints de escritura, una operación aceptada con un identificador existente actualiza ese ticket.
 
-Las consultas al evaluador siguen sin respuesta. El comportamiento de duplicados y la asignación de fecha a los tramos nocturnos se mantienen como supuestos documentados en DECISIONES.md. Si una corrección válida cambia la fecha de salida en Lima, el ticket se traslada al nuevo cierre. Una corrección rechazada conserva el cobro anterior.
+Las consultas al evaluador siguen sin respuesta. La selección de la última fila válida fue solicitada expresamente por el candidato. La asignación de fecha a los tramos nocturnos sigue como supuesto documentado en DECISIONES.md. Si una corrección válida cambia la fecha de salida en Lima, el ticket se traslada al nuevo cierre. Una corrección rechazada conserva el cobro anterior.
 
 ### GET /api/cierre?fecha=2026-10-12
 
@@ -100,3 +100,17 @@ La fecha del cierre es la de la salida en Lima. El subtotal de perdidos suma el 
 | E05 | Error estructural de solicitud o fila, como cabecera inválida, archivo ausente o ticket vacío. |
 
 Consulta [DECISIONES.md](DECISIONES.md) para las interpretaciones del contrato, [DEFENSA.md](DEFENSA.md) para las preguntas y el recorrido del código, e [IA.md](IA.md) para la declaración de asistencia.
+
+## Gestión de tickets y consulta del reglamento
+
+El botón «Consultar artículos» abre una ventana con los doce artículos, ambas adendas y los feriados. Los artículos citados en el comprobante abren la misma ventana en la explicación correspondiente.
+
+El cierre muestra los tickets de la fecha consultada. Editar permite cambiar vehículo, entrada, salida y pérdida del ticket. El identificador permanece fijo. El cobro se recalcula con el mismo motor y se refrescan los totales del cierre. Borrar pide confirmación y elimina el ticket de la base.
+
+| Endpoint adicional | Resultado |
+| --- | --- |
+| GET /api/tickets?fecha=2026-10-12 | Objeto con tickets, ordenados por salida en Lima. Cada ticket incluye ticket, placa, tipo, entrada, salida, ticket_perdido, minutos y total_centimos. |
+| PUT /api/tickets/{ticket} | Recibe tipo, entrada, salida y ticket_perdido. Devuelve la liquidación recalculada. Si se incluye ticket, debe coincidir con la ruta. |
+| DELETE /api/tickets/{ticket} | Devuelve ticket y eliminado=true. |
+
+Un ticket inexistente en edición o borrado devuelve HTTP 404 con codigo E06 y mensaje. Los errores de validación siguen devolviendo HTTP 422. Los tres endpoints originales mantienen sus contratos.

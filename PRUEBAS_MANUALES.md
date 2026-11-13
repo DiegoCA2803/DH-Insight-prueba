@@ -68,12 +68,12 @@ En L18 el cálculo debe mostrar S/ 13.50, −S/ 6.75 por moto y −S/ 0.05 de re
 | I01 | Sube legado_ejemplo.csv antes de las liquidaciones manuales | 4 aceptadas, 4 rechazadas. T-1001 anterior se descarta y no cuenta como rechazo | [ ] |
 | I02 | Revisa los importes de aceptadas | T-1001 S/ 21.00, T-1002 S/ 6.70, T-1006 S/ 16.00 y T-1007 S/ 28.00 | [ ] |
 | I03 | Revisa las rechazadas | Fila 4 T-1003 E02, fila 5 T-1004 E03, fila 6 T-1005 E01 y fila 10 T-1008 E03 | [ ] |
-| I04 | Sube pruebas/validaciones.csv | 5 aceptadas y 7 rechazadas. La fila 13 se descarta por duplicada | [ ] |
-| I05 | Revisa las cinco aceptadas | CSV-TIPO S/ 3.00, CSV-ZONA S/ 6.00, CSV-DESFASE S/ 6.00, CSV-SINZONA S/ 6.00, CSV-SEGUNDOS S/ 6.00 | [ ] |
+| I04 | Sube pruebas/validaciones.csv | 6 aceptadas y 7 rechazadas. CSV-DUP se acepta con la fila 13 válida y se rechaza la fila 14 inválida | [ ] |
+| I05 | Revisa las seis aceptadas | CSV-TIPO S/ 3.00, CSV-ZONA S/ 6.00, CSV-DESFASE S/ 6.00, CSV-SINZONA S/ 6.00, CSV-SEGUNDOS S/ 6.00 y CSV-DUP S/ 6.00 | [ ] |
 | I06 | Revisa errores y normalización | E02 para CAMION y última CSV-DUP, E03 para formato, fecha imposible y salida vacía, E01 para orden y E04 para perdido. CSV-TIPO acepta espacios y minúsculas. CSV-ZONA acepta perdido vacío como NO | [ ] |
 | I07 | Vuelve a subir legado_ejemplo.csv | Se actualizan los mismos cuatro tickets. No se duplica la cantidad ni el cobro | [ ] |
 
-La última fila inválida de CSV-DUP provoca su rechazo. No se recupera la aparición anterior válida. Esto es un supuesto documentado.
+CSV-DUP se acepta con su última fila válida. Su fila inválida posterior se reporta como rechazo. Esta regla fue solicitada expresamente por el candidato.
 
 ## Cierre y correcciones
 
@@ -141,14 +141,14 @@ Invoke-WebRequest -Uri 'http://localhost:3000/api/liquidaciones' -Method Post -C
 | Formulario con total y artículos por línea | L01, L05 y L18 | [ ] |
 | Importar multipart archivo con aceptación parcial | I01–I06 y A07 | [ ] |
 | Normalizar tipo, perdido, fechas y zonas | I04–I06 | [ ] |
-| Resolver duplicados sin contar las filas anteriores como rechazadas | I01, I04 e I07 | [ ] |
+| Aceptar la última válida y reportar las inválidas, descartando válidas sustituidas | I01, I04 e I07 | [ ] |
 | Decidir y justificar el caso T-1008 | I03 y DECISIONES.md | [ ] |
 | Cierre con cantidad, total y subtotales | C00–C06 | [ ] |
 | Persistir tras reiniciar el servidor | C08 usando la misma base | [ ] |
 | Contrato JSON y errores 422 uniformes | A01–A08 | [ ] |
 | Un solo comando para arrancar | README.md y npm.cmd start con Node compatible | [ ] |
 | Documentar cómo correr tests | README.md y npm.cmd test | [ ] |
-| Tests de cada artículo | test/tarifa.test.js y npm.cmd test, 22 pruebas totales al preparar esta guía | [ ] |
+| Tests de cada artículo | test/tarifa.test.js y npm.cmd test, 29 pruebas totales al preparar esta guía | [ ] |
 | Historial real de commits | git log --oneline | [ ] |
 | DECISIONES.md con supuestos y motivos | Leer las decisiones, especialmente L24–L25 y D01–D03 | [ ] |
 | IA.md con declaración de asistencia | Leer IA.md | [ ] |
@@ -168,3 +168,14 @@ Si se inicia sin DB_PATH se utiliza data/tickets.sqlite, que es otra base.
 
 Para reportar resultados, usa los IDs, por ejemplo «L01 cumple, L05 no muestra el ajuste de −S/ 49, C01 cumple». Los resultados esperados siguen las interpretaciones de DECISIONES.md pendientes de respuesta del evaluador.
 
+
+## Ventanas y gestión desde caja
+
+- [ ] Abre «Consultar artículos». Revisa los doce artículos, las dos adendas y el Anexo A. Cierra con el botón y con Escape.
+- [ ] Liquida un ticket y pulsa el artículo en su comprobante. Debe abrir la explicación de ese artículo.
+- [ ] Consulta un cierre y comprueba que la lista tenga tantos tickets como indica la cantidad.
+- [ ] Pulsa Editar. Cambia una hora o tipo y guarda. Deben recalcularse el cobro y los subtotales.
+- [ ] Cambia la fecha de salida. El ticket debe dejar el cierre anterior y aparecer en el nuevo.
+- [ ] Intenta una salida anterior a la entrada. Debe aparecer E01 y conservarse el cobro anterior.
+- [ ] Pulsa Borrar y después Cancelar. El ticket debe conservarse.
+- [ ] Confirma Borrar. Debe desaparecer de la lista y reducirse la cantidad y los importes.

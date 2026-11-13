@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { ErrorRegla } from './fechas.js';
 import { leerArchivo, leerJson, leerUrl, responderJson } from './http.js';
-import { consultarCierre, importarTickets, liquidarTicket } from './operaciones.js';
+import { borrarTicket, consultarCierre, editarTicket, importarTickets, liquidarTicket, listarTickets } from './operaciones.js';
 import { abrirTickets } from './tickets.js';
 
 const PUBLICOS = new Map([
@@ -18,6 +18,20 @@ export function crearServidor({ rutaDb = process.env.DB_PATH || 'data/tickets.sq
   const servidor = createServer(async (req, res) => {
     try {
       const { pathname, searchParams } = leerUrl(req);
+      if (req.method === 'GET' && pathname === '/api/tickets') {
+        return responderJson(res, 200, { tickets: listarTickets(searchParams.get('fecha'), tickets) });
+      }
+      const rutaTicket = /^\/api\/tickets\/([^/]+)$/.exec(pathname);
+      if (rutaTicket && ['PUT', 'DELETE'].includes(req.method)) {
+        let ticket;
+        try {
+          ticket = decodeURIComponent(rutaTicket[1]);
+        } catch {
+          throw new ErrorRegla('E05', 'Identificador de ticket inválido');
+        }
+        if (req.method === 'DELETE') return responderJson(res, 200, borrarTicket(ticket, tickets));
+        return responderJson(res, 200, editarTicket(ticket, await leerJson(req), tickets));
+      }
       if (req.method === 'POST' && pathname === '/api/liquidaciones') {
         const resultado = liquidarTicket(await leerJson(req), tickets);
         return responderJson(res, 200, resultado);
@@ -38,7 +52,7 @@ export function crearServidor({ rutaDb = process.env.DB_PATH || 'data/tickets.sq
       return responderJson(res, 404, { codigo: 'E05', mensaje: 'Ruta no encontrada' });
     } catch (error) {
       if (error instanceof ErrorRegla) {
-        return responderJson(res, 422, { codigo: error.codigo, mensaje: error.message });
+        return responderJson(res, error.status, { codigo: error.codigo, mensaje: error.message });
       }
       console.error(error);
       return responderJson(res, 500, { codigo: 'E05', mensaje: 'Error interno del servidor' });

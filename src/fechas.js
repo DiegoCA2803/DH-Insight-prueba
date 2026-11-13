@@ -4,9 +4,10 @@ const DESFASE_LIMA = -5 * 60;
 const FORMATO = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|[+-]\d{2}:\d{2})?$/u;
 
 export class ErrorRegla extends Error {
-  constructor(codigo, mensaje) {
+  constructor(codigo, mensaje, status = 422) {
     super(mensaje);
     this.codigo = codigo;
+    this.status = status;
   }
 }
 

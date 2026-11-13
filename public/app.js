@@ -1,6 +1,21 @@
 const porId = (id) => document.getElementById(id);
 const moneda = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
 const soles = (centimos) => moneda.format(centimos / 100);
+let fechaConsultada;
+
+function abrirArticulos(referencia = '') {
+  const ventana = porId('dialogo-articulos');
+  ventana.showModal();
+  const numero = /Art\. (\d+)/.exec(referencia);
+  const destino = numero ? porId('articulo-' + numero[1]) : porId('articulo-1');
+  ventana.scrollTop = destino.offsetTop - ventana.querySelector('header').offsetHeight - 20;
+  destino.focus({ preventScroll: true });
+}
+
+porId('ver-articulos').addEventListener('click', () => abrirArticulos());
+for (const boton of document.querySelectorAll('[data-cerrar]')) {
+  boton.addEventListener('click', () => porId(boton.dataset.cerrar).close());
+}
 
 const vistas = [...document.querySelectorAll('.vista')];
 const enlaces = [...document.querySelectorAll('nav a')];
@@ -50,9 +65,11 @@ function mostrarDesglose(detalle) {
     const fila = cuerpo.insertRow();
     const concepto = fila.insertCell();
     concepto.textContent = item.concepto;
-    const articulo = document.createElement('span');
+    const articulo = document.createElement('button');
+    articulo.type = 'button';
     articulo.className = 'articulo';
     articulo.textContent = item.articulo;
+    articulo.addEventListener('click', () => abrirArticulos(item.articulo));
     concepto.append(articulo);
     fila.insertCell().textContent = soles(item.monto_centimos);
   }
@@ -129,9 +146,69 @@ operar('importar', async (datos) => {
   return 'Importación finalizada. Revisa los resultados debajo.';
 });
 
-operar('cierre', async (datos) => {
-  const fecha = datos.get('fecha');
-  const cierre = await api('/api/cierre?' + new URLSearchParams({ fecha }));
+function instante(valor) {
+  const iso = valor.replace(' ', 'T');
+  return new Date(/(Z|[+-]\d{2}:\d{2})$/.test(iso) ? iso : iso + '-05:00');
+}
+
+function fechaFormulario(valor) {
+  return new Date(instante(valor).getTime() - 5 * 60 * 60 * 1000).toISOString().slice(0, -1);
+}
+
+const formatoFecha = new Intl.DateTimeFormat('es-PE', {
+  dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Lima',
+});
+
+function abrirEditor(ticket) {
+  const form = porId('form-editar');
+  form.elements.ticket.value = ticket.ticket;
+  form.elements.tipo.value = ticket.tipo;
+  form.elements.entrada.value = fechaFormulario(ticket.entrada);
+  form.elements.salida.value = fechaFormulario(ticket.salida);
+  form.elements.ticket_perdido.checked = ticket.ticket_perdido;
+  porId('estado-editar').textContent = '';
+  porId('dialogo-editar').showModal();
+}
+
+let ticketPorBorrar;
+function confirmarBorrado(ticket) {
+  ticketPorBorrar = ticket.ticket;
+  porId('confirmacion-borrar').textContent = '¿Borrar el ticket ' + ticket.ticket + ' por ' + soles(ticket.total_centimos) + '?';
+  porId('estado-borrar').textContent = '';
+  porId('dialogo-borrar').showModal();
+}
+
+function mostrarTickets(tickets) {
+  const cuerpo = porId('tickets-cierre');
+  cuerpo.replaceChildren();
+  for (const ticket of tickets) {
+    const fila = cuerpo.insertRow();
+    for (const valor of [ticket.ticket, ticket.tipo, formatoFecha.format(instante(ticket.entrada)),
+      formatoFecha.format(instante(ticket.salida)), ticket.ticket_perdido ? 'Sí' : 'No', soles(ticket.total_centimos)]) {
+      fila.insertCell().textContent = valor;
+    }
+    const acciones = fila.insertCell();
+    acciones.className = 'acciones-ticket';
+    const editar = document.createElement('button');
+    editar.type = 'button';
+    editar.className = 'boton secundario pequeno';
+    editar.textContent = 'Editar';
+    editar.setAttribute('aria-label', 'Editar ticket ' + ticket.ticket);
+    editar.addEventListener('click', () => abrirEditor(ticket));
+    const borrar = document.createElement('button');
+    borrar.type = 'button';
+    borrar.className = 'boton borrar pequeno';
+    borrar.textContent = 'Borrar';
+    borrar.setAttribute('aria-label', 'Borrar ticket ' + ticket.ticket);
+    borrar.addEventListener('click', () => confirmarBorrado(ticket));
+    acciones.append(editar, borrar);
+  }
+  if (!tickets.length) tabla('tickets-cierre', [], 7, 'No hay tickets para esta fecha.');
+}
+
+async function cargarCierre(fecha) {
+  const consulta = '?' + new URLSearchParams({ fecha });
+  const [cierre, listado] = await Promise.all([api('/api/cierre' + consulta), api('/api/tickets' + consulta)]);
   porId('total-cierre').textContent = soles(cierre.total_centimos);
   porId('cantidad-cierre').textContent = cierre.cantidad;
   const [anio, mes, dia] = fecha.split('-');
@@ -141,5 +218,74 @@ operar('cierre', async (datos) => {
     ['Motos', soles(cierre.por_tipo.MOTO)],
     ['Tickets perdidos', soles(cierre.tickets_perdidos_centimos)],
   ]);
+  mostrarTickets(listado.tickets);
+  fechaConsultada = fecha;
   return cierre.cantidad ? 'Cierre consultado.' : 'No hay tickets registrados para esta fecha.';
+}
+
+operar('cierre', (datos) => cargarCierre(datos.get('fecha')));
+
+async function refrescarCierre(mensaje) {
+  const estado = porId('estado-cierre');
+  try {
+    await cargarCierre(fechaConsultada);
+    estado.dataset.tipo = 'exito';
+    estado.textContent = mensaje;
+  } catch (error) {
+    porId('resultado-cierre').hidden = true;
+    estado.dataset.tipo = 'error';
+    estado.textContent = mensaje + ' Vuelve a consultar el cierre. ' + error.message;
+  }
+}
+
+function limpiarComprobante(ticket) {
+  if (porId('ticket-liquidar').textContent !== 'Ticket ' + ticket) return;
+  porId('resultado-liquidar').hidden = true;
+  porId('vacio-liquidar').hidden = false;
+  porId('estado-liquidar').textContent = 'El ticket ' + ticket + ' se modificó desde el cierre de caja.';
+}
+
+porId('form-editar').addEventListener('submit', async (evento) => {
+  evento.preventDefault();
+  const form = evento.currentTarget;
+  const boton = form.querySelector('button');
+  const estado = porId('estado-editar');
+  const datos = Object.fromEntries(new FormData(form));
+  datos.ticket_perdido = form.elements.ticket_perdido.checked;
+  datos.entrada += '-05:00';
+  datos.salida += '-05:00';
+  boton.disabled = true;
+  estado.textContent = 'Guardando…';
+  try {
+    await api('/api/tickets/' + encodeURIComponent(datos.ticket), {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos),
+    });
+    porId('dialogo-editar').close();
+    limpiarComprobante(datos.ticket);
+    await refrescarCierre('Ticket ' + datos.ticket + ' actualizado y recalculado.');
+  } catch (error) {
+    estado.dataset.tipo = 'error';
+    estado.textContent = error.message;
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+porId('confirmar-borrar').addEventListener('click', async (evento) => {
+  const boton = evento.currentTarget;
+  const estado = porId('estado-borrar');
+  const ticket = ticketPorBorrar;
+  boton.disabled = true;
+  estado.textContent = 'Borrando…';
+  try {
+    await api('/api/tickets/' + encodeURIComponent(ticket), { method: 'DELETE' });
+    porId('dialogo-borrar').close();
+    limpiarComprobante(ticket);
+    await refrescarCierre('Ticket ' + ticket + ' borrado.');
+  } catch (error) {
+    estado.dataset.tipo = 'error';
+    estado.textContent = error.message;
+  } finally {
+    boton.disabled = false;
+  }
 });

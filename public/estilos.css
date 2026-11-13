@@ -859,3 +859,142 @@ input::file-selector-button {
     scroll-behavior: auto;
   }
 }
+
+.acciones-superiores {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.secundario {
+  color: var(--verde);
+  background: var(--blanco);
+  border: 1px solid var(--borde);
+}
+.secundario:hover {
+  background: var(--verde-suave);
+}
+.articulo {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+.tickets-panel {
+  margin-top: 24px;
+}
+.ayuda-lista {
+  margin: 12px 0 22px;
+  color: var(--secundario);
+  font-size: 13px;
+}
+.tabla-tickets {
+  min-width: 850px;
+}
+.tabla-tickets td {
+  vertical-align: middle;
+}
+.acciones-ticket {
+  white-space: nowrap;
+}
+.acciones-ticket .boton + .boton {
+  margin-left: 7px;
+}
+.boton.pequeno {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.borrar {
+  color: #973e2d;
+  background: #fff1ed;
+}
+.peligro {
+  color: white;
+  background: #973e2d;
+}
+.ventana {
+  width: min(800px, calc(100% - 32px));
+  max-height: 86vh;
+  padding: 0;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  color: var(--tinta);
+  background: white;
+  box-shadow: 0 20px 70px #153f4133;
+}
+.ventana::backdrop {
+  background: #102f34a8;
+}
+.ventana-formulario {
+  width: min(620px, calc(100% - 32px));
+}
+.ventana-cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 26px;
+  background: white;
+  border-bottom: 1px solid var(--borde);
+}
+.ventana-cabecera p {
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--secundario);
+}
+.ventana-contenido {
+  padding: 26px;
+}
+.diccionario article {
+  padding: 23px 0;
+  border-bottom: 1px solid var(--borde);
+  scroll-margin-top: 110px;
+}
+.diccionario article:last-child {
+  border-bottom: 0;
+}
+.diccionario h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+.diccionario article p {
+  max-width: 70ch;
+  font-size: 14px;
+  color: var(--secundario);
+}
+.aviso-regla {
+  padding: 15px;
+  background: var(--verde-suave);
+  border-radius: 6px;
+  font-size: 13px;
+}
+input[readonly] {
+  background: var(--fondo);
+  color: var(--secundario);
+}
+@media (max-width: 720px) {
+  .barra-superior {
+    min-height: 64px;
+    height: auto;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .acciones-superiores .fecha-sistema {
+    display: none;
+  }
+  #ver-articulos {
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .ventana-cabecera, .ventana-contenido {
+    padding: 20px;
+  }
+}

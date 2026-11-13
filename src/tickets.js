@@ -38,8 +38,31 @@ export function abrirTickets(ruta) {
       COALESCE(SUM(CASE WHEN perdido = 1 THEN total_centimos END), 0) AS perdidos
     FROM tickets WHERE fecha_salida = ?
   `);
+  const listar = db.prepare(`
+    SELECT ticket, placa, tipo, entrada, salida, perdido AS ticket_perdido, minutos, total_centimos
+    FROM tickets WHERE fecha_salida = ?
+  `);
+  const actualizar = db.prepare(`
+    UPDATE tickets SET tipo = ?, entrada = ?, salida = ?, fecha_salida = ?,
+      perdido = ?, minutos = ?, total_centimos = ?, detalle = ? WHERE ticket = ?
+  `);
+  const borrar = db.prepare('DELETE FROM tickets WHERE ticket = ?');
 
   return {
+    listar(fecha) {
+      return listar.all(fecha)
+        .sort((a, b) => marcaLima(a.salida) - marcaLima(b.salida) || a.ticket.localeCompare(b.ticket))
+        .map((fila) => ({ ...fila, ticket_perdido: Boolean(fila.ticket_perdido) }));
+    },
+    editar({ datos, resultado }) {
+      const cambio = actualizar.run(datos.tipo, datos.entrada, datos.salida,
+        fechaLima(marcaLima(datos.salida)), Number(datos.ticket_perdido), resultado.minutos,
+        resultado.total_centimos, JSON.stringify(resultado.detalle), datos.ticket);
+      return cambio.changes === 1;
+    },
+    borrar(ticket) {
+      return borrar.run(ticket).changes === 1;
+    },
     guardar(registros) {
       db.exec('BEGIN IMMEDIATE');
       try {

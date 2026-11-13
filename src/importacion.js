@@ -62,19 +62,10 @@ export function procesarCsv(bytes) {
     throw new ErrorRegla('E05', 'Cabecera CSV inválida');
   }
 
-  const ultimas = new Map();
-  const sinTicket = [];
-  for (const fila of filas) {
-    if (!fila.malformada && fila.campos.length === 1 && !fila.campos[0].trim()) continue;
-    const ticket = fila.campos[0].trim();
-    if (ticket) ultimas.set(ticket, fila);
-    else sinTicket.push(fila);
-  }
-
-  const aceptadas = [];
+  const ultimasValidas = new Map();
   const rechazadas = [];
-  const registros = [];
-  for (const { fila, campos, malformada } of [...ultimas.values(), ...sinTicket].sort((a, b) => a.fila - b.fila)) {
+  for (const { fila, campos, malformada } of filas) {
+    if (!malformada && campos.length === 1 && !campos[0].trim()) continue;
     const ticket = campos[0].trim();
     try {
       if (malformada || campos.length !== CABECERA.length || !ticket) {
@@ -90,12 +81,17 @@ export function procesarCsv(bytes) {
         ticket_perdido: indicador === 'SI',
       };
       const resultado = calcularLiquidacion(datos);
-      registros.push({ datos, resultado });
-      aceptadas.push({ ticket, total_centimos: resultado.total_centimos });
+      ultimasValidas.set(ticket, { fila, datos, resultado });
     } catch (error) {
       if (!(error instanceof ErrorRegla)) throw error;
       rechazadas.push({ fila, ticket, codigo: error.codigo, motivo: error.message });
     }
   }
+  const registros = [...ultimasValidas.values()]
+    .sort((a, b) => a.fila - b.fila)
+    .map(({ datos, resultado }) => ({ datos, resultado }));
+  const aceptadas = registros.map(({ resultado }) => ({
+    ticket: resultado.ticket, total_centimos: resultado.total_centimos,
+  }));
   return { aceptadas, rechazadas, registros };
 }

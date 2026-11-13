@@ -34,7 +34,7 @@
   <div class="aplicacion">
     <header class="barra-superior">
       <span>Panel de operaciones</span>
-      <span class="fecha-sistema"><time id="fecha-actual"></time><span class="zona">Hora de Lima</span></span>
+      <div class="acciones-superiores"><button type="button" class="boton secundario" id="ver-articulos">Consultar artículos</button><span class="fecha-sistema"><time id="fecha-actual"></time><span class="zona">Hora de Lima</span></span></div>
     </header>
     <main id="contenido" tabindex="-1">
       <section id="liquidacion" class="vista" aria-labelledby="titulo-liquidacion">
@@ -102,7 +102,7 @@
             <div class="tabla-contenedor"><table><caption>Filas rechazadas</caption><thead><tr><th>Fila</th><th>Ticket</th><th>Motivo</th></tr></thead><tbody id="rechazadas"></tbody></table></div>
           </div>
         </div>
-        <p class="nota">Para un ticket repetido en el archivo se considera su última fila. Los tickets existentes se actualizan únicamente si la nueva fila es válida.</p>
+        <p class="nota">Para un ticket repetido se acepta su última fila válida. Las filas inválidas se muestran con su motivo de rechazo y las válidas anteriores se sustituyen.</p>
       </section>
 
       <section id="cierre" class="vista" aria-labelledby="titulo-cierre">
@@ -114,11 +114,44 @@
         <div id="resultado-cierre" hidden>
           <div class="resumen-cierre"><div><p>Total cobrado</p><strong id="total-cierre"></strong><span id="fecha-cierre"></span></div><div class="conteo-cierre"><strong id="cantidad-cierre"></strong><span>tickets registrados</span></div></div>
           <div class="panel"><div class="titulo-panel"><svg class="icono"><use href="#i-caja"/></svg><h2>Distribución del cobro</h2></div><div class="tabla-contenedor"><table><thead><tr><th>Concepto</th><th>Importe</th></tr></thead><tbody id="detalle-cierre"></tbody></table></div><p class="nota-panel">Los tickets perdidos también están incluidos en el subtotal de su tipo de vehículo.</p></div>
+          <div class="panel tickets-panel"><h2>Tickets de este día</h2><p class="ayuda-lista">Edita los datos para recalcular un cobro o borra un ticket del cierre.</p><div class="tabla-contenedor"><table class="tabla-tickets"><thead><tr><th>Ticket</th><th>Vehículo</th><th>Entrada en Lima</th><th>Salida en Lima</th><th>Perdido</th><th>Total</th><th>Acciones</th></tr></thead><tbody id="tickets-cierre"></tbody></table></div></div>
         </div>
         <div id="vacio-cierre" class="vacio-cierre"><svg class="icono grande"><use href="#i-caja"/></svg><p>Selecciona una fecha para consultar tu caja.</p></div>
       </section>
       <footer class="pie-pagina"><span>Parqueo Quilla</span><span>Cobros en soles peruanos</span></footer>
     </main>
   </div>
+  <dialog id="dialogo-articulos" class="ventana" aria-labelledby="titulo-articulos">
+    <header class="ventana-cabecera"><div><h2 id="titulo-articulos">Diccionario de artículos</h2><p>Reglamento tarifario de Parqueo Quilla, versión 3.</p></div><button type="button" class="boton secundario" data-cerrar="dialogo-articulos">Cerrar</button></header>
+    <div class="ventana-contenido diccionario">
+      <p class="aviso-regla">Las adendas modifican las reglas originales. Aquí se explica cuándo se aplica cada versión.</p>
+      <article id="articulo-1" tabindex="-1"><h3>Art. 1. Moneda y hora</h3><p>Los cobros se expresan en soles. Todas las fechas se interpretan en hora de Lima, UTC−05:00. Una marca con otra zona se convierte a Lima.</p></article>
+      <article id="articulo-2" tabindex="-1"><h3>Art. 2. Permanencia</h3><p>Se descartan los segundos de la entrada y de la salida antes de calcular los minutos. De 10:00:59 a 10:16:00 se cuentan 16 minutos.</p></article>
+      <article id="articulo-3" tabindex="-1"><h3>Art. 3. Franjas y tramos</h3><p>El día va de 06:00 a 22:00 y la noche de 22:00 a 06:00. La permanencia se divide cuando cambia de franja. Cada tramo se asigna a la fecha en que empieza. La medianoche no divide una noche.</p></article>
+      <article id="articulo-4" tabindex="-1"><h3>Art. 4. Tarifa diurna normal</h3><p>De lunes a sábado, salvo feriados, la primera hora o fracción cuesta S/ 6.00. Luego se cobran S/ 1.50 por cada fracción de 15 minutos. Por ejemplo, 80 minutos cuestan S/ 9.00. La Adenda 1 limita la primera hora a una sola vez por permanencia.</p></article>
+      <article id="articulo-5" tabindex="-1"><h3>Art. 5. Tarifa diurna especial</h3><p>En domingo o feriado del Anexo A, la primera hora o fracción cuesta S/ 5.00. Luego se cobra S/ 1.00 por cada fracción de 15 minutos. También se aplica la Adenda 1.</p></article>
+      <article id="articulo-6" tabindex="-1"><h3>Art. 6. Tarifa nocturna</h3><p>Cada tramo nocturno cuesta S/ 10.00, independientemente de su duración, cuando corresponde cobrar la permanencia.</p></article>
+      <article id="articulo-7" tabindex="-1"><h3>Art. 7. Tope diario</h3><p>Los tramos asignados a una misma fecha se suman y se limitan a S/ 35.00. El ajuste se muestra con signo negativo. El cargo por ticket perdido se agrega después.</p></article>
+      <article id="articulo-8" tabindex="-1"><h3>Art. 8. Motocicletas</h3><p>Las motos pagan el 50 % del subtotal resultante después de aplicar los topes diarios. El descuento no afecta al cargo por ticket perdido.</p></article>
+      <article id="articulo-9" tabindex="-1"><h3>Art. 9. Redondeo</h3><p>Después del descuento se redondea hacia abajo al múltiplo de S/ 0.10 más cercano. S/ 6.75 se convierte en S/ 6.70.</p></article>
+      <article id="articulo-10" tabindex="-1"><h3>Art. 10. Ticket perdido</h3><p>Se agregan S/ 25.00 al final. Este cargo fijo no recibe descuentos ni redondeo.</p></article>
+      <article id="articulo-11" tabindex="-1"><h3>Art. 11. Tolerancia original</h3><p>Para entradas anteriores al 01/10/2026, hasta 10 minutos inclusive no se cobra la permanencia. Si el ticket está perdido se cobran S/ 25.00. Para entradas posteriores consulta la Adenda 2.</p></article>
+      <article id="articulo-12" tabindex="-1"><h3>Art. 12. Orden del cálculo</h3><p>Primero tolerancia, después tarifas por tramo, tope por fecha, descuento de moto, redondeo y finalmente cargo por ticket perdido.</p></article>
+      <article id="adenda-1" tabindex="-1"><h3>Adenda 1. Primera hora única</h3><p>La primera hora se cobra únicamente en el primer tramo diurno. Los siguientes tramos diurnos se cobran desde el minuto cero por fracciones de 15 minutos, usando la tarifa de su fecha.</p></article>
+      <article id="adenda-2" tabindex="-1"><h3>Adenda 2. Nueva tolerancia</h3><p>Para entradas desde el 01/10/2026 a las 00:00, la tolerancia pasa a 15 minutos inclusive y solo aplica si el ticket no está perdido. La versión se elige por la entrada, aunque la salida sea de otro día.</p></article>
+      <article id="anexo-a" tabindex="-1"><h3>Anexo A. Feriados de 2026</h3><p>01/01, 02/04, 03/04, 01/05, 29/06, 28/07, 29/07, 30/08, 08/10, 01/11, 08/12 y 25/12. Solo estas fechas se consideran feriados para el cálculo.</p></article>
+    </div>
+  </dialog>
+  <dialog id="dialogo-editar" class="ventana ventana-formulario" aria-labelledby="titulo-editar">
+    <header class="ventana-cabecera"><h2 id="titulo-editar">Editar ticket</h2><button type="button" class="boton secundario" data-cerrar="dialogo-editar">Cerrar</button></header>
+    <div class="ventana-contenido"><form id="form-editar">
+      <div class="campos"><label>Ticket <input name="ticket" readonly required></label><label>Vehículo <select name="tipo"><option value="AUTO">Auto</option><option value="MOTO">Moto</option></select></label><label>Entrada en Lima <input type="datetime-local" step="0.001" name="entrada" required></label><label>Salida en Lima <input type="datetime-local" step="0.001" name="salida" required></label></div>
+      <label class="opcion-perdido"><input type="checkbox" name="ticket_perdido"><span>Ticket perdido</span></label><p class="ayuda">Al guardar se recalcula el cobro. Si cambia la fecha de salida, el ticket pasa al cierre de esa fecha.</p><button class="boton principal">Guardar y recalcular</button>
+    </form><p id="estado-editar" class="estado" role="status"></p></div>
+  </dialog>
+  <dialog id="dialogo-borrar" class="ventana ventana-formulario" aria-labelledby="titulo-borrar">
+    <header class="ventana-cabecera"><h2 id="titulo-borrar">Borrar ticket</h2><button type="button" class="boton secundario" data-cerrar="dialogo-borrar">Cancelar</button></header>
+    <div class="ventana-contenido"><p id="confirmacion-borrar"></p><p class="ayuda-lista">El ticket se quitará de la base y se actualizarán la cantidad y los importes del cierre.</p><button type="button" class="boton peligro" id="confirmar-borrar">Borrar ticket</button><p id="estado-borrar" class="estado" role="status"></p></div>
+  </dialog>
 </body>
 </html>
