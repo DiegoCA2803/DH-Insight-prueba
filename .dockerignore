@@ -1,0 +1,10 @@
+# Solo se envían al constructor los archivos necesarios para ejecutar y probar.
+**
+!package.json
+!legado_ejemplo.csv
+!src/
+!src/**
+!public/
+!public/**
+!test/
+!test/**

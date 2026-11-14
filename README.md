@@ -2,7 +2,53 @@
 
 Liquidador de estacionamiento, importación CSV y cierre de caja. El enunciado original está en [INFO](INFO).
 
-## Ejecutar
+## Iniciar con Docker
+
+Requisito: Docker con Compose. En Windows o macOS, abre Docker Desktop y usa contenedores Linux. No necesitas instalar Node.js ni SQLite en tu equipo.
+
+Desde la carpeta que contiene `compose.yaml`, ejecuta:
+
+```bash
+docker compose up --build -d
+```
+
+Abre [http://localhost:3000](http://localhost:3000). La primera ejecución descarga la imagen de Node.js 22.20.0, construye la aplicación y ejecuta las 30 pruebas antes de iniciar el servidor. Si una prueba falla, la construcción se detiene.
+
+Para revisar el estado o ver los mensajes del servidor:
+
+```bash
+docker compose ps
+docker compose logs -f app
+```
+
+Para detener la aplicación:
+
+```bash
+docker compose down
+```
+
+Los tickets se guardan en SQLite dentro del volumen `datos`, separado del contenedor. Se conservan al detener, reconstruir o volver a iniciar con `docker compose up --build -d`. La base de Docker es independiente de `data/tickets.sqlite` y de las pruebas manuales ejecutadas sin Docker; el primer arranque crea una base vacía. `docker compose down --volumes` elimina ese volumen y todos los tickets guardados en él.
+
+Si el puerto 3000 está ocupado, puedes usar otro puerto. Por ejemplo, en PowerShell:
+
+```powershell
+$env:APP_PORT = '3001'
+docker compose up --build -d
+```
+
+En ese caso abre [http://localhost:3001](http://localhost:3001). El servidor dentro del contenedor mantiene su puerto 3000.
+
+### Ejecutar las pruebas con Docker
+
+Después de construir la imagen, puedes repetir las pruebas sin mantener el servidor encendido:
+
+```bash
+docker compose run --rm --no-deps app npm test
+```
+
+Las pruebas usan bases temporales y no modifican los tickets de la aplicación. El contexto de construcción incluye solo código, pruebas y el CSV de ejemplo; excluye las bases locales y los archivos personales.
+
+## Ejecutar sin Docker
 
 Con Node.js 22.20 o superior, desde la raíz del repositorio:
 
@@ -99,7 +145,7 @@ La fecha del cierre es la de la salida en Lima. El subtotal de perdidos suma el 
 | E04 | Indicador perdido inválido en una fila CSV. |
 | E05 | Error estructural de solicitud o fila, como cabecera inválida, archivo ausente o ticket vacío. |
 
-Consulta [DECISIONES.md](DECISIONES.md) para las interpretaciones del contrato, [DEFENSA.md](DEFENSA.md) para las preguntas y el recorrido del código, e [IA.md](IA.md) para la declaración de asistencia.
+Consulta [DECISIONES.md](DECISIONES.md) para las interpretaciones del contrato e [IA.md](IA.md) para la declaración de asistencia.
 
 ## Gestión de tickets y consulta del reglamento
 
