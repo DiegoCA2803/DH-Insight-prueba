@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { crearServidor } from '../src/server.js';
 
+/** Levanta una instancia aislada en un puerto libre y permite cerrarla después de cada prueba. */
 async function abrir(rutaDb) {
   const servidor = crearServidor({ rutaDb });
   servidor.listen(0, '127.0.0.1');
@@ -20,6 +21,7 @@ async function abrir(rutaDb) {
   };
 }
 
+/** Envía una liquidación base y permite sobrescribir los campos relevantes para cada escenario. */
 function liquidar(app, cambios = {}) {
   return app.pedir('/api/liquidaciones', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -30,6 +32,7 @@ function liquidar(app, cambios = {}) {
   });
 }
 
+/** Envía el CSV como multipart real para verificar el mismo contrato que usa el navegador. */
 function importar(app, csv) {
   const form = new FormData();
   form.set('archivo', new Blob([csv], { type: 'text/csv' }), 'legado.csv');

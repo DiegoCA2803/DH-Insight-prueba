@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { marcaLima } from '../src/fechas.js';
 import { calcularLiquidacion } from '../src/tarifa.js';
 
+/** Construye un ticket de prueba para centrar cada caso en la regla tarifaria que verifica. */
 function liquidar(entrada, salida, tipo = 'AUTO', ticket_perdido = false) {
   return calcularLiquidacion({ ticket: 'T-TEST', tipo, entrada, salida, ticket_perdido });
 }
@@ -52,8 +53,21 @@ test('Art. 7: E5 limita cada fecha y conserva el desglose exacto', () => {
 });
 
 test('Art. 3 y 7: una estancia que empieza a las 03:00 asigna su primer tramo a ese día', () => {
-  const { total_centimos } = liquidar('2026-10-12 03:00', '2026-10-12 11:00');
+  const { total_centimos, detalle } = liquidar('2026-10-12 03:00', '2026-10-12 11:00');
   assert.equal(total_centimos, 3500);
+  assert.deepEqual(detalle.map(({ articulo, monto_centimos }) => [articulo, monto_centimos]),
+    [['Art. 6', 1000], ['Art. 4', 3000], ['Art. 7', -500]]);
+  assert.ok(detalle.every(({ concepto }) => concepto.includes('2026-10-12')));
+});
+
+test('Art. 3 y 7: entrar a las 23:00 del día anterior deja la noche y el día en fechas distintas', () => {
+  // Ejemplo confirmado por el evaluador: S/ 10 del 11/10 y S/ 30 del 12/10, sin ajuste de tope.
+  const { total_centimos, detalle } = liquidar('2026-10-11 23:00', '2026-10-12 11:00');
+  assert.equal(total_centimos, 4000);
+  assert.deepEqual(detalle.map(({ articulo, monto_centimos }) => [articulo, monto_centimos]),
+    [['Art. 6', 1000], ['Art. 4', 3000]]);
+  assert.ok(detalle[0].concepto.includes('2026-10-11'));
+  assert.ok(detalle[1].concepto.includes('2026-10-12'));
 });
 
 test('Art. 8: la moto paga la mitad del subtotal', () => {

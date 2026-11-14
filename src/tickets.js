@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { fechaLima, marcaLima } from './fechas.js';
 
+/** Abre SQLite y devuelve las operaciones de persistencia usadas por los servicios de negocio. */
 export function abrirTickets(ruta) {
   if (ruta !== ':memory:') mkdirSync(dirname(ruta), { recursive: true });
   const db = new DatabaseSync(ruta);
@@ -22,6 +23,8 @@ export function abrirTickets(ruta) {
     ) STRICT;
     CREATE INDEX IF NOT EXISTS tickets_fecha_salida ON tickets (fecha_salida);
   `);
+  // Consultas parametrizadas: los datos del ticket nunca se concatenan al SQL.
+  // La clave única permite corregir o reimportar sin duplicar el cobro del cierre.
   const insertar = db.prepare(`
     INSERT INTO tickets (ticket, placa, tipo, entrada, salida, fecha_salida, perdido, minutos, total_centimos, detalle)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -49,20 +52,24 @@ export function abrirTickets(ruta) {
   const borrar = db.prepare('DELETE FROM tickets WHERE ticket = ?');
 
   return {
+    /** Ordena por el instante de salida en Lima, aunque las marcas usen zonas distintas. */
     listar(fecha) {
       return listar.all(fecha)
         .sort((a, b) => marcaLima(a.salida) - marcaLima(b.salida) || a.ticket.localeCompare(b.ticket))
         .map((fila) => ({ ...fila, ticket_perdido: Boolean(fila.ticket_perdido) }));
     },
+    /** Actualiza un registro existente y su fecha de caja; no crea tickets por accidente. */
     editar({ datos, resultado }) {
       const cambio = actualizar.run(datos.tipo, datos.entrada, datos.salida,
         fechaLima(marcaLima(datos.salida)), Number(datos.ticket_perdido), resultado.minutos,
         resultado.total_centimos, JSON.stringify(resultado.detalle), datos.ticket);
       return cambio.changes === 1;
     },
+    /** Informa si se eliminó un registro para distinguir un borrado de un ticket inexistente. */
     borrar(ticket) {
       return borrar.run(ticket).changes === 1;
     },
+    /** Guarda el lote completo en una transacción: ante un fallo se revierte toda la escritura. */
     guardar(registros) {
       db.exec('BEGIN IMMEDIATE');
       try {
@@ -77,6 +84,7 @@ export function abrirTickets(ruta) {
         throw error;
       }
     },
+    /** Agrupa por salida en Lima; el subtotal de perdidos ya forma parte del total por vehículo. */
     cierre(fecha) {
       const { cantidad, total_centimos, auto, moto, perdidos } = consultar.get(fecha);
       return {
@@ -84,6 +92,7 @@ export function abrirTickets(ruta) {
         tickets_perdidos_centimos: perdidos,
       };
     },
+    // Libera la conexión cuando el servidor o las pruebas terminan de usarla.
     cerrar: () => db.close(),
   };
 }

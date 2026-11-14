@@ -7,14 +7,17 @@ import { leerArchivo, leerJson, leerUrl, responderJson } from './http.js';
 import { borrarTicket, consultarCierre, editarTicket, importarTickets, liquidarTicket, listarTickets } from './operaciones.js';
 import { abrirTickets } from './tickets.js';
 
+// Lista cerrada de recursos: la URL del usuario nunca se usa como ruta libre del disco.
 const PUBLICOS = new Map([
   ['/', ['index.html', 'text/html; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
   ['/estilos.css', ['estilos.css', 'text/css; charset=utf-8']],
 ]);
 
+/** Conecta las rutas HTTP con las operaciones y permite aislar la base de datos en las pruebas. */
 export function crearServidor({ rutaDb = process.env.DB_PATH || 'data/tickets.sqlite' } = {}) {
   const tickets = abrirTickets(rutaDb);
+  // Las rutas solo adaptan entrada y salida HTTP; las reglas de cobro viven en tarifa.js.
   const servidor = createServer(async (req, res) => {
     try {
       const { pathname, searchParams } = leerUrl(req);
@@ -51,6 +54,7 @@ export function crearServidor({ rutaDb = process.env.DB_PATH || 'data/tickets.sq
       }
       return responderJson(res, 404, { codigo: 'E05', mensaje: 'Ruta no encontrada' });
     } catch (error) {
+      // Los rechazos previstos conservan su código; los fallos internos no exponen detalles al cliente.
       if (error instanceof ErrorRegla) {
         return responderJson(res, error.status, { codigo: error.codigo, mensaje: error.message });
       }
@@ -62,6 +66,7 @@ export function crearServidor({ rutaDb = process.env.DB_PATH || 'data/tickets.sq
   return servidor;
 }
 
+// Arranca solo al ejecutar este archivo; importarlo desde las pruebas no ocupa el puerto 3000.
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const puerto = Number(process.env.PORT ?? 3000);
   const servidor = crearServidor();

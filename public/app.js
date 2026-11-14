@@ -1,8 +1,11 @@
+/** Obtiene un elemento de las vistas por su identificador. */
 const porId = (id) => document.getElementById(id);
 const moneda = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
+/** Convierte los céntimos enteros de la API a soles solo para su presentación. */
 const soles = (centimos) => moneda.format(centimos / 100);
 let fechaConsultada;
 
+/** Abre el diccionario y enfoca el artículo citado en el comprobante. */
 function abrirArticulos(referencia = '') {
   const ventana = porId('dialogo-articulos');
   ventana.showModal();
@@ -20,6 +23,7 @@ for (const boton of document.querySelectorAll('[data-cerrar]')) {
 const vistas = [...document.querySelectorAll('.vista')];
 const enlaces = [...document.querySelectorAll('nav a')];
 
+/** Sincroniza la vista visible, la navegación accesible y el título con el fragmento de la URL. */
 function activarVista() {
   const seleccionada = vistas.find((vista) => '#' + vista.id === location.hash) ?? vistas[0];
   for (const vista of vistas) vista.hidden = vista !== seleccionada;
@@ -33,6 +37,7 @@ function activarVista() {
 window.addEventListener('hashchange', activarVista);
 activarVista();
 
+// La fecha inicial del cierre usa Lima, independientemente de la zona del navegador.
 const ahora = new Date();
 porId('fecha-actual').textContent = new Intl.DateTimeFormat('es-PE', {
   day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Lima',
@@ -44,6 +49,7 @@ const hoyLima = partes.year + '-' + partes.month + '-' + partes.day;
 porId('fecha-actual').dateTime = hoyLima;
 document.querySelector('#form-cierre [name="fecha"]').value = hoyLima;
 
+/** Dibuja una tabla o su estado vacío usando texto, sin interpretar los datos como HTML. */
 function tabla(id, valores, columnas, vacio) {
   const cuerpo = porId(id);
   cuerpo.replaceChildren();
@@ -58,6 +64,7 @@ function tabla(id, valores, columnas, vacio) {
   }
 }
 
+/** Muestra cargos y ajustes, con botones que enlazan cada línea con su artículo. */
 function mostrarDesglose(detalle) {
   const cuerpo = porId('detalle-liquidar');
   cuerpo.replaceChildren();
@@ -76,6 +83,7 @@ function mostrarDesglose(detalle) {
   if (!detalle.length) tabla('detalle-liquidar', [], 2, 'Este ticket no tiene cargos.');
 }
 
+/** Ejecuta una solicitud y convierte errores HTTP o de conexión en mensajes para el operador. */
 async function api(ruta, opciones) {
   let respuesta;
   try {
@@ -88,6 +96,7 @@ async function api(ruta, opciones) {
   return datos;
 }
 
+/** Comparte el ciclo de envío de los formularios: espera, resultado, error y desbloqueo. */
 function operar(nombre, ejecutar) {
   const form = porId('form-' + nombre);
   const estado = porId('estado-' + nombre);
@@ -118,6 +127,7 @@ function operar(nombre, ejecutar) {
   });
 }
 
+// Formulario de liquidación: las horas ingresadas son de Lima; el backend calcula el cobro.
 operar('liquidar', async (datos) => {
   const ticket = Object.fromEntries(datos);
   ticket.ticket_perdido = datos.has('ticket_perdido');
@@ -134,6 +144,7 @@ operar('liquidar', async (datos) => {
   return 'Ticket ' + respuesta.ticket + ' calculado y guardado.';
 });
 
+// Importación: conserva el multipart y muestra aceptadas y rechazadas en tablas separadas.
 operar('importar', async (datos) => {
   const archivo = datos.get('archivo');
   if (archivo.size > 5 * 1024 * 1024) throw new Error('El archivo supera 5 MiB. Selecciona un archivo más pequeño.');
@@ -146,11 +157,13 @@ operar('importar', async (datos) => {
   return 'Importación finalizada. Revisa los resultados debajo.';
 });
 
+/** Interpreta una marca con zona o asume Lima si proviene del CSV sin zona explícita. */
 function instante(valor) {
   const iso = valor.replace(' ', 'T');
   return new Date(/(Z|[+-]\d{2}:\d{2})$/.test(iso) ? iso : iso + '-05:00');
 }
 
+/** Convierte la marca a hora de pared de Lima para editarla en un campo datetime-local. */
 function fechaFormulario(valor) {
   return new Date(instante(valor).getTime() - 5 * 60 * 60 * 1000).toISOString().slice(0, -1);
 }
@@ -159,6 +172,7 @@ const formatoFecha = new Intl.DateTimeFormat('es-PE', {
   dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Lima',
 });
 
+/** Carga los datos guardados en el editor, conservando segundos y el identificador original. */
 function abrirEditor(ticket) {
   const form = porId('form-editar');
   form.elements.ticket.value = ticket.ticket;
@@ -171,6 +185,7 @@ function abrirEditor(ticket) {
 }
 
 let ticketPorBorrar;
+/** Prepara la confirmación; abrir o cancelar la ventana no modifica la base de datos. */
 function confirmarBorrado(ticket) {
   ticketPorBorrar = ticket.ticket;
   porId('confirmacion-borrar').textContent = '¿Borrar el ticket ' + ticket.ticket + ' por ' + soles(ticket.total_centimos) + '?';
@@ -178,6 +193,7 @@ function confirmarBorrado(ticket) {
   porId('dialogo-borrar').showModal();
 }
 
+/** Construye la lista del cierre con acciones de edición y borrado para cada ticket. */
 function mostrarTickets(tickets) {
   const cuerpo = porId('tickets-cierre');
   cuerpo.replaceChildren();
@@ -206,6 +222,7 @@ function mostrarTickets(tickets) {
   if (!tickets.length) tabla('tickets-cierre', [], 7, 'No hay tickets para esta fecha.');
 }
 
+/** Consulta el resumen y la lista de la misma fecha y actualiza la pantalla cuando ambos llegan. */
 async function cargarCierre(fecha) {
   const consulta = '?' + new URLSearchParams({ fecha });
   const [cierre, listado] = await Promise.all([api('/api/cierre' + consulta), api('/api/tickets' + consulta)]);
@@ -225,6 +242,7 @@ async function cargarCierre(fecha) {
 
 operar('cierre', (datos) => cargarCierre(datos.get('fecha')));
 
+/** Recarga los totales después de una modificación y avisa si la consulta posterior falla. */
 async function refrescarCierre(mensaje) {
   const estado = porId('estado-cierre');
   try {
@@ -238,6 +256,7 @@ async function refrescarCierre(mensaje) {
   }
 }
 
+/** Oculta un comprobante que quedó desactualizado al editar o borrar ese ticket desde caja. */
 function limpiarComprobante(ticket) {
   if (porId('ticket-liquidar').textContent !== 'Ticket ' + ticket) return;
   porId('resultado-liquidar').hidden = true;
@@ -245,6 +264,7 @@ function limpiarComprobante(ticket) {
   porId('estado-liquidar').textContent = 'El ticket ' + ticket + ' se modificó desde el cierre de caja.';
 }
 
+// Guardar recalcula en el servidor antes de actualizar caja; un rechazo deja abierta la edición.
 porId('form-editar').addEventListener('submit', async (evento) => {
   evento.preventDefault();
   const form = evento.currentTarget;
@@ -271,6 +291,7 @@ porId('form-editar').addEventListener('submit', async (evento) => {
   }
 });
 
+// Solo la confirmación envía DELETE; se bloquea el botón mientras la solicitud está pendiente.
 porId('confirmar-borrar').addEventListener('click', async (evento) => {
   const boton = evento.currentTarget;
   const estado = porId('estado-borrar');

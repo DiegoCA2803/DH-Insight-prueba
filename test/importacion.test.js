@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { procesarCsv } from '../src/importacion.js';
 
+/** Añade la cabecera oficial para probar combinaciones de filas del CSV. */
 function importar(filas) {
   return procesarCsv(Buffer.from(['ticket,placa,tipo,entrada,salida,perdido', ...filas].join('\n')));
 }

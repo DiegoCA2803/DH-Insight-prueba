@@ -8,7 +8,7 @@ Abre http://localhost:3000. Se inició la aplicación con DB_PATH=data/pruebas-m
 2. Importa pruebas/cierre.csv y verifica C01–C03.
 3. Importa pruebas/correccion_caja.csv y verifica C04–C05.
 4. Importa pruebas/validaciones.csv y verifica I04–I06.
-5. Prueba los formularios con los tickets L01–L28 y E01.
+5. Prueba los formularios con los tickets L01-L29 y E01.
 6. Comprueba la API, la persistencia, los documentos y la defensa.
 
 Usa los identificadores indicados. Repetir un ticket válido lo actualiza. Los totales de caja de este documento se refieren a los pasos y las fechas indicados.
@@ -43,10 +43,11 @@ Selecciona «Liquidar ticket». Usa el ID de la primera columna como identificad
 | L22 | AUTO | 30/09 10:00 | 30/09 10:10 | Sí | S/ 25.00 | La regla original conserva el cargo perdido | [ ] |
 | L23 | MOTO | 12/10 07:00 | 12/10 07:14 | Sí | S/ 28.00 | Nueva tolerancia no se aplica a perdidos | [ ] |
 | L24 | AUTO | 12/10 10:00 | 12/10 10:00 | Sí | S/ 25.00 | Supuesto de cero minutos sin tramos | [ ] |
-| L25 | AUTO | 12/10 03:00 | 12/10 11:00 | No | S/ 35.00 | Supuesto de fecha del inicio efectivo del tramo | [ ] |
+| L25 | AUTO | 12/10 03:00 | 12/10 11:00 | No | S/ 35.00 | Confirmado por el evaluador: ambos tramos pertenecen al 12/10 y comparten tope | [ ] |
 | L26 | AUTO | 17/10 21:58 | 18/10 06:16 | No | S/ 18.00 | Primera hora del sábado, noche y cuartos del domingo | [ ] |
 | L27 | AUTO | 30/09 23:59 | 01/10 00:10 | No | S/ 10.00 | La versión de tolerancia depende de la entrada | [ ] |
 | L28 | MOTO | 12/10 10:00 | 13/10 07:10 | Sí | S/ 46.20 | Orden completo del Art. 12 | [ ] |
+| L29 | AUTO | 11/10 23:00 | 12/10 11:00 | No | S/ 40.00 | Confirmado por el evaluador: noche del 11/10 S/ 10 y día del 12/10 S/ 30, sin ajuste de tope | [ ] |
 | E01 | AUTO | 12/10 11:00 | 12/10 10:00 | No | Error E01, sin guardar el ticket | Salida anterior a entrada | [ ] |
 
 ### Desglose obligatorio de L05
@@ -73,7 +74,7 @@ En L18 el cálculo debe mostrar S/ 13.50, −S/ 6.75 por moto y −S/ 0.05 de re
 | I06 | Revisa errores y normalización | E02 para CAMION y última CSV-DUP, E03 para formato, fecha imposible y salida vacía, E01 para orden y E04 para perdido. CSV-TIPO acepta espacios y minúsculas. CSV-ZONA acepta perdido vacío como NO | [ ] |
 | I07 | Vuelve a subir legado_ejemplo.csv | Se actualizan los mismos cuatro tickets. No se duplica la cantidad ni el cobro | [ ] |
 
-CSV-DUP se acepta con su última fila válida. Su fila inválida posterior se reporta como rechazo. Esta regla fue solicitada expresamente por el candidato.
+Antes de importar, comprueba que el formulario explique la política de última fila válida y advierta que una corrección inválida podría conservar un dato anterior. CSV-DUP se acepta con su última fila válida y su fila inválida posterior se reporta como rechazo. El evaluador admitió esta política si se muestra claramente y se justifica en DECISIONES.md.
 
 ## Cierre y correcciones
 
@@ -148,11 +149,11 @@ Invoke-WebRequest -Uri 'http://localhost:3000/api/liquidaciones' -Method Post -C
 | Contrato JSON y errores 422 uniformes | A01–A08 | [ ] |
 | Un solo comando para arrancar | README.md y npm.cmd start con Node compatible | [ ] |
 | Documentar cómo correr tests | README.md y npm.cmd test | [ ] |
-| Tests de cada artículo | test/tarifa.test.js y npm.cmd test, 29 pruebas totales al preparar esta guía | [ ] |
+| Tests de cada artículo | test/tarifa.test.js y npm.cmd test, incluidos los dos ejemplos aclarados por el evaluador | [ ] |
 | Historial real de commits | git log --oneline | [ ] |
 | DECISIONES.md con supuestos y motivos | Leer las decisiones, especialmente L24–L25 y D01–D03 | [ ] |
 | IA.md con declaración de asistencia | Leer IA.md | [ ] |
-| Repositorio remoto y enlace para entregar | git remote -v y enlace accesible. Sigue pendiente configurar el destino de GitHub | [ ] |
+| Repositorio remoto y enlace para entregar | git remote -v debe mostrar https://github.com/DiegoCA2803/DH-Insight-prueba.git; comprobar además que el último commit esté publicado | [ ] |
 | Explicar el código y cambiar una adenda en vivo | Recorrer DEFENSA.md e implementar el ensayo con sus tests | [ ] |
 
 ## Cómo reiniciar conservando estas pruebas
@@ -166,7 +167,7 @@ npm.cmd start
 
 Si se inicia sin DB_PATH se utiliza data/tickets.sqlite, que es otra base.
 
-Para reportar resultados, usa los IDs, por ejemplo «L01 cumple, L05 no muestra el ajuste de −S/ 49, C01 cumple». Los resultados esperados siguen las interpretaciones de DECISIONES.md pendientes de respuesta del evaluador.
+Para reportar resultados, usa los IDs, por ejemplo «L01 cumple, L05 no muestra el ajuste de -S/ 49, C01 cumple». Los resultados siguen DECISIONES.md, que distingue las aclaraciones recibidas de los supuestos aún pendientes.
 
 
 ## Ventanas y gestión desde caja

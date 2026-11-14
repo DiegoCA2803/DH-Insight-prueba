@@ -1,4 +1,5 @@
 @charset "UTF-8";
+/* Colores compartidos por las vistas y las ventanas de la caja. */
 :root {
   --tinta: #1c3333;
   --petroleo: #173f41;
@@ -97,6 +98,7 @@ h2 {
   outline-offset: 4px;
 }
 
+/* Navegación principal; en pantallas pequeñas pasa a la parte superior. */
 .barra-lateral {
   position: fixed;
   inset: 0 auto 0 0;
@@ -428,6 +430,7 @@ button:disabled {
   display: none;
 }
 
+/* Comprobante: destaca el total y conserva el desglose de los ajustes negativos. */
 .comprobante {
   position: relative;
   padding: 27px;
@@ -740,6 +743,7 @@ input::file-selector-button {
   white-space: nowrap;
 }
 
+/* Adaptación de las columnas y los controles al ancho disponible. */
 @media (min-width: 1600px) {
   main {
     padding-top: 64px;
@@ -854,6 +858,7 @@ input::file-selector-button {
   }
 }
 
+/* Respeta la preferencia del usuario de reducir movimiento. */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -916,6 +921,7 @@ input::file-selector-button {
   color: white;
   background: #973e2d;
 }
+/* Ventanas de artículos, edición y confirmación de borrado. */
 .ventana {
   width: min(800px, calc(100% - 32px));
   max-height: 86vh;

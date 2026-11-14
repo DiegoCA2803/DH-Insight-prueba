@@ -16,7 +16,7 @@ Abre [http://localhost:3000](http://localhost:3000). Node trae SQLite integrado 
 npm test
 ```
 
-Las 29 pruebas cubren los doce artículos, las dos adendas, el Anexo A y los cinco ejemplos públicos. Las pruebas HTTP importan el CSV oficial, validan el cierre en Lima y vuelven a abrir la base después de apagar el servidor. También comprueban la corrección de un ticket existente, su traslado entre cierres y la conservación del cobro anterior cuando una corrección se rechaza. Una prueba adicional verifica la reversión completa de una transacción que falla a mitad del lote.
+Las 30 pruebas cubren los doce artículos, las dos adendas, el Anexo A y los cinco ejemplos públicos. Incluyen los dos casos de atribución de tramos confirmados por el evaluador, verificando sus totales y desgloses. Las pruebas HTTP importan el CSV oficial, validan el cierre en Lima y vuelven a abrir la base después de apagar el servidor. También comprueban la corrección de un ticket existente, su traslado entre cierres y la conservación del cobro anterior cuando una corrección se rechaza. Una prueba adicional verifica la reversión completa de una transacción que falla a mitad del lote.
 
 En Windows, si PowerShell bloquea el script `npm.ps1`, usa `npm.cmd start` o `npm.cmd test`.
 
@@ -74,7 +74,7 @@ Envía el CSV UTF-8 como `multipart/form-data` en el campo `archivo`. El límite
 
 La fila es la línea física en la que empieza el registro, contando la cabecera como línea 1. Se valida cada fila y se conserva la última válida de cada ticket. Las inválidas se reportan con su número de fila y motivo, incluso cuando otra fila del mismo ticket se acepta. Las válidas sustituidas no se cuentan como rechazadas. En ambos endpoints de escritura, una operación aceptada con un identificador existente actualiza ese ticket.
 
-Las consultas al evaluador siguen sin respuesta. La selección de la última fila válida fue solicitada expresamente por el candidato. La asignación de fecha a los tramos nocturnos sigue como supuesto documentado en DECISIONES.md. Si una corrección válida cambia la fecha de salida en Lima, el ticket se traslada al nuevo cierre. Una corrección rechazada conserva el cobro anterior.
+El evaluador confirmó la fecha del inicio efectivo de cada tramo: un AUTO del 12/10 a las 03:00 a las 11:00 paga S/ 35; si entra el 11/10 a las 23:00 y sale el 12/10 a las 11:00, paga S/ 40 porque los tramos pertenecen a fechas distintas. También admitió ambas políticas para duplicados con una última fila inválida. Elegimos la última válida, lo advertimos en la pantalla de importación y justificamos sus ventajas y límites en DECISIONES.md. Los demás supuestos siguen documentados por separado. Si una corrección válida cambia la fecha de salida en Lima, el ticket se traslada al nuevo cierre. Una corrección rechazada conserva el cobro anterior.
 
 ### GET /api/cierre?fecha=2026-10-12
 

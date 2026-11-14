@@ -3,7 +3,9 @@ export const DIA = 1_440 * MINUTO;
 const DESFASE_LIMA = -5 * 60;
 const FORMATO = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|[+-]\d{2}:\d{2})?$/u;
 
+// Los errores de negocio llevan un código estable para la API y un mensaje para el operador.
 export class ErrorRegla extends Error {
+  /** Crea un rechazo de validación (422), salvo que la operación indique otro estado HTTP. */
   constructor(codigo, mensaje, status = 422) {
     super(mensaje);
     this.codigo = codigo;
@@ -38,18 +40,22 @@ export function marcaLima(valor) {
   return marca;
 }
 
+/** Unifica el error E03 usado por las marcas de tiempo y la fecha del cierre. */
 export function fechaInvalida() {
   return new ErrorRegla('E03', 'Una fecha u hora no tiene un formato aceptado');
 }
 
+/** Extrae AAAA-MM-DD de una marca que ya representa la hora de pared de Lima. */
 export function fechaLima(marca) {
   return new Date(marca).toISOString().slice(0, 10);
 }
 
+/** Extrae HH:mm para describir los tramos sin aplicar otra conversión de zona. */
 export function horaLima(marca) {
   return new Date(marca).toISOString().slice(11, 16);
 }
 
+/** Exige una fecha calendario real en formato AAAA-MM-DD para consultar caja. */
 export function validarFechaCierre(fecha) {
   if (typeof fecha !== 'string' || fecha.length !== 10) throw fechaInvalida();
   marcaLima(fecha + 'T00:00');

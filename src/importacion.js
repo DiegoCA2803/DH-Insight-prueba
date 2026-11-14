@@ -3,6 +3,7 @@ import { calcularLiquidacion } from './tarifa.js';
 
 const CABECERA = ['ticket', 'placa', 'tipo', 'entrada', 'salida', 'perdido'];
 
+/** Lee campos entrecomillados y conserva la línea física donde empieza cada registro. */
 function* leerCsv(texto) {
   let campos = [];
   let campo = '';
@@ -48,6 +49,7 @@ function* leerCsv(texto) {
   }
 }
 
+/** Valida todas las filas y devuelve la última válida por ticket, sin escribir en la base. */
 export function procesarCsv(bytes) {
   let texto;
   try {
@@ -62,6 +64,8 @@ export function procesarCsv(bytes) {
     throw new ErrorRegla('E05', 'Cabecera CSV inválida');
   }
 
+  // Decisión admitida por el evaluador: una fila inválida no desplaza la válida anterior.
+  // Las válidas sustituidas no son rechazos; cada fila inválida sí conserva su motivo.
   const ultimasValidas = new Map();
   const rechazadas = [];
   for (const { fila, campos, malformada } of filas) {
@@ -81,12 +85,14 @@ export function procesarCsv(bytes) {
         ticket_perdido: indicador === 'SI',
       };
       const resultado = calcularLiquidacion(datos);
+      // Solo se reemplaza después de validar y liquidar correctamente toda la fila.
       ultimasValidas.set(ticket, { fila, datos, resultado });
     } catch (error) {
       if (!(error instanceof ErrorRegla)) throw error;
       rechazadas.push({ fila, ticket, codigo: error.codigo, motivo: error.message });
     }
   }
+  // Ordena las aceptadas según la posición de la fila que finalmente representa cada ticket.
   const registros = [...ultimasValidas.values()]
     .sort((a, b) => a.fila - b.fila)
     .map(({ datos, resultado }) => ({ datos, resultado }));

@@ -9,6 +9,7 @@
   <script type="module" src="/app.js"></script>
 </head>
 <body>
+  <!-- Símbolos compartidos por la navegación, los formularios y los estados vacíos. -->
   <svg class="iconos" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M4 4h16v5a3 3 0 0 0 0 6v5H4v-5a3 3 0 0 0 0-6V4Z"/><path d="M14 4v3m0 3v4m0 3v3"/></symbol>
     <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></symbol>
@@ -37,6 +38,7 @@
       <div class="acciones-superiores"><button type="button" class="boton secundario" id="ver-articulos">Consultar artículos</button><span class="fecha-sistema"><time id="fecha-actual"></time><span class="zona">Hora de Lima</span></span></div>
     </header>
     <main id="contenido" tabindex="-1">
+      <!-- Las tres vistas comparten la página; app.js activa la indicada por la URL. -->
       <section id="liquidacion" class="vista" aria-labelledby="titulo-liquidacion">
         <div class="encabezado-vista">
           <div><h1 id="titulo-liquidacion">Cada ticket, en orden.</h1><p>Calcula el cobro y registra la salida del vehículo.</p></div>
@@ -91,6 +93,7 @@
               <input id="archivo" type="file" name="archivo" accept=".csv,text/csv" required aria-describedby="ayuda-csv">
             </label>
             <p class="ayuda" id="ayuda-csv">El archivo debe incluir las columnas ticket, placa, tipo, entrada, salida y perdido.</p>
+            <p class="nota" id="politica-duplicados"><strong>Tickets repetidos: se acepta la última fila válida.</strong> Una fila inválida posterior no la reemplaza y se muestra como rechazada con su número y motivo. Las válidas anteriores se sustituyen sin contarse como rechazos. Revisa los rechazos: el cobro aceptado puede usar datos anteriores a una corrección fallida.</p>
             <button class="boton principal">Importar tickets <svg class="icono"><use href="#i-arrow"/></svg></button>
           </form>
           <p id="estado-importar" class="estado" role="status"></p>
@@ -102,7 +105,6 @@
             <div class="tabla-contenedor"><table><caption>Filas rechazadas</caption><thead><tr><th>Fila</th><th>Ticket</th><th>Motivo</th></tr></thead><tbody id="rechazadas"></tbody></table></div>
           </div>
         </div>
-        <p class="nota">Para un ticket repetido se acepta su última fila válida. Las filas inválidas se muestran con su motivo de rechazo y las válidas anteriores se sustituyen.</p>
       </section>
 
       <section id="cierre" class="vista" aria-labelledby="titulo-cierre">
@@ -121,13 +123,14 @@
       <footer class="pie-pagina"><span>Parqueo Quilla</span><span>Cobros en soles peruanos</span></footer>
     </main>
   </div>
+  <!-- Ventanas nativas: el navegador gestiona el foco modal y el cierre con Escape. -->
   <dialog id="dialogo-articulos" class="ventana" aria-labelledby="titulo-articulos">
     <header class="ventana-cabecera"><div><h2 id="titulo-articulos">Diccionario de artículos</h2><p>Reglamento tarifario de Parqueo Quilla, versión 3.</p></div><button type="button" class="boton secundario" data-cerrar="dialogo-articulos">Cerrar</button></header>
     <div class="ventana-contenido diccionario">
       <p class="aviso-regla">Las adendas modifican las reglas originales. Aquí se explica cuándo se aplica cada versión.</p>
       <article id="articulo-1" tabindex="-1"><h3>Art. 1. Moneda y hora</h3><p>Los cobros se expresan en soles. Todas las fechas se interpretan en hora de Lima, UTC−05:00. Una marca con otra zona se convierte a Lima.</p></article>
       <article id="articulo-2" tabindex="-1"><h3>Art. 2. Permanencia</h3><p>Se descartan los segundos de la entrada y de la salida antes de calcular los minutos. De 10:00:59 a 10:16:00 se cuentan 16 minutos.</p></article>
-      <article id="articulo-3" tabindex="-1"><h3>Art. 3. Franjas y tramos</h3><p>El día va de 06:00 a 22:00 y la noche de 22:00 a 06:00. La permanencia se divide cuando cambia de franja. Cada tramo se asigna a la fecha en que empieza. La medianoche no divide una noche.</p></article>
+      <article id="articulo-3" tabindex="-1"><h3>Art. 3. Franjas y tramos</h3><p>El día va de 06:00 a 22:00 y la noche de 22:00 a 06:00. Un tramo es la parte de la permanencia del vehículo dentro de una franja. Cada tramo se asigna a la fecha en que empieza efectivamente. La medianoche no divide una noche.</p><p>Ejemplo confirmado: si un AUTO entra el 12/10 a las 03:00 y sale a las 11:00, sus tramos 03:00–06:00 y 06:00–11:00 pertenecen al 12/10. S/ 10 + S/ 30 comparten el tope y quedan en S/ 35. Si entra el 11/10 a las 23:00 y sale el 12/10 a las 11:00, la noche pertenece al 11/10 y el día al 12/10: se cobran S/ 40 porque ningún subtotal supera su tope. Ambos ejemplos son sin ticket perdido.</p></article>
       <article id="articulo-4" tabindex="-1"><h3>Art. 4. Tarifa diurna normal</h3><p>De lunes a sábado, salvo feriados, la primera hora o fracción cuesta S/ 6.00. Luego se cobran S/ 1.50 por cada fracción de 15 minutos. Por ejemplo, 80 minutos cuestan S/ 9.00. La Adenda 1 limita la primera hora a una sola vez por permanencia.</p></article>
       <article id="articulo-5" tabindex="-1"><h3>Art. 5. Tarifa diurna especial</h3><p>En domingo o feriado del Anexo A, la primera hora o fracción cuesta S/ 5.00. Luego se cobra S/ 1.00 por cada fracción de 15 minutos. También se aplica la Adenda 1.</p></article>
       <article id="articulo-6" tabindex="-1"><h3>Art. 6. Tarifa nocturna</h3><p>Cada tramo nocturno cuesta S/ 10.00, independientemente de su duración, cuando corresponde cobrar la permanencia.</p></article>

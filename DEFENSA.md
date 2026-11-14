@@ -1,17 +1,17 @@
 # Preparación para la defensa
 
-Las consultas siguen pendientes de respuesta. Durante la defensa se explican como interpretaciones propias documentadas en DECISIONES.md.
+El evaluador confirmó la fecha de inicio efectivo del tramo y admitió ambas políticas de duplicados si se muestran y justifican. Conservamos la última fila válida. Las otras decisiones continúan como interpretaciones propias documentadas en DECISIONES.md.
 
-## Preguntas para enviar antes del día 3
+## Consultas planteadas y estado de las respuestas
 
-Estas preguntas piden aclaraciones sobre casos en los que dos lecturas producen cobros o registros distintos. La última columna recoge la interpretación aplicada mientras llega una respuesta.
+Estas preguntas piden aclaraciones sobre casos en los que dos lecturas producen cobros o registros distintos. La última columna recoge la implementación. Ya se respondió sobre tramos y duplicados dentro del CSV; no hay una aclaración expresa sobre las demás consultas.
 
 | Pregunta para el evaluador | De dónde sale y por qué importa | Implementación actual |
 | --- | --- | --- |
-| Un AUTO entra el 12/10 a las 03:00 y sale a las 11:00. ¿Los S/ 10 nocturnos se imputan al 11/10, cuando comenzó la franja, o al 12/10, cuando empezó el tramo del ticket? | Arts. 3 y 7. Con la fecha del tramo se cobran S/ 35 por el tope. Con la fecha de la franja serían S/ 40. | [`tramos()`](src/tarifa.js) usa la fecha de las 03:00. |
+| Un AUTO entra el 12/10 a las 03:00 y sale a las 11:00. ¿A qué fecha pertenece la noche? | Arts. 3 y 7. El evaluador confirmó que un tramo es la parte de la permanencia dentro de la franja. | [`tramos()`](src/tarifa.js) usa el 12/10 para ambos tramos y cobra S/ 35. Si entra el 11/10 a las 23:00 y sale el 12/10 a las 11:00, la noche pertenece al 11/10 y el total es S/ 40. Ambos casos tienen pruebas. |
 | Si se liquida o importa un ticket que ya existe en la base, ¿se actualiza o se rechaza? | La regla de duplicados solo describe repeticiones dentro de un archivo. Cambiar una salida puede trasladar el ticket a otro cierre. | [`guardar()`](src/tickets.js) actualiza el registro existente mediante su clave única. Las operaciones rechazadas no lo modifican. |
 | Si la entrada es 10:00:50 y la salida 10:00:01, ¿corresponde E01 aunque ambas marcas se reduzcan a 10:00? | Art. 2 y contrato E01. Validar después del truncamiento podría aceptar una salida anterior y guardarla en caja. | [`calcularLiquidacion()`](src/tarifa.js) compara primero los instantes. |
-| Si la última fila de un ticket repetido es inválida, ¿qué se hace? | El enunciado habla de la última fila y el candidato pidió aceptar la última válida. Hay que explicar esa diferencia durante la defensa. | procesarCsv valida todas las filas, conserva la última válida en un Map por ticket y reporta las inválidas. Si todas fallan, la base mantiene el registro anterior. |
+| Si la última fila de un ticket repetido es inválida, ¿qué se hace? | El evaluador reconoció la ambigüedad y admitió ambas políticas con explicación visible y justificación. Elegimos rescatar la última válida, advirtiendo que podría ser un dato anterior a una corrección fallida. | `procesarCsv()` valida todas las filas, conserva la última válida en un Map por ticket y reporta las inválidas. La pantalla explica la política. Si todas fallan, la base mantiene el registro anterior. |
 | Para un ticket perdido desde el 01/10, si las marcas quedan en el mismo minuto después de descartar segundos, ¿se cobra solo S/ 25 o también una primera hora o tarifa nocturna? | Arts. 2–6, Art. 10 y Adenda 2. La adenda elimina la tolerancia para perdidos y deja abierto cómo tratar un tramo de duración cero. | [`tramos()`](src/tarifa.js) genera tramos de duración positiva. El resultado es S/ 25. |
 | ¿El subtotal de tickets perdidos en el cierre incluye el cobro completo de cada uno o únicamente el cargo fijo de S/ 25? | Contrato de cierre y Art. 10. Para una moto perdida cobrada a S/ 31, el subtotal cambia entre S/ 31 y S/ 25. | [Consulta de cierre](src/tickets.js) suma el cobro completo y documenta el solapamiento con el subtotal de vehículo. |
 
