@@ -9,7 +9,7 @@ Abre http://localhost:3000. Se inició la aplicación con DB_PATH=data/pruebas-m
 3. Importa pruebas/correccion_caja.csv y verifica C04–C05.
 4. Importa pruebas/validaciones.csv y verifica I04–I06.
 5. Prueba los formularios con los tickets L01-L29 y E01.
-6. Comprueba la API, la persistencia, los documentos y la defensa.
+6. Comprueba la API, la persistencia y los documentos de entrega.
 
 Usa los identificadores indicados. Repetir un ticket válido lo actualiza. Los totales de caja de este documento se refieren a los pasos y las fechas indicados.
 
@@ -154,7 +154,6 @@ Invoke-WebRequest -Uri 'http://localhost:3000/api/liquidaciones' -Method Post -C
 | DECISIONES.md con supuestos y motivos | Leer las decisiones, especialmente L24–L25 y D01–D03 | [ ] |
 | IA.md con declaración de asistencia | Leer IA.md | [ ] |
 | Repositorio remoto y enlace para entregar | git remote -v debe mostrar https://github.com/DiegoCA2803/DH-Insight-prueba.git; comprobar además que el último commit esté publicado | [ ] |
-| Explicar el código y cambiar una adenda en vivo | Recorrer DEFENSA.md e implementar el ensayo con sus tests | [ ] |
 
 ## Cómo reiniciar conservando estas pruebas
 

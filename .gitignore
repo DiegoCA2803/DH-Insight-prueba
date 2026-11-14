@@ -1,3 +1,8 @@
 data/
 node_modules/
 .env
+
+# Material personal de preparación; se conserva fuera del seguimiento de Git.
+[Dd][Ee][Ff][Ee][Nn][Ss][Aa]*
+*[Dd][Ee][Ff][Ee][Nn][Ss][Aa].md
+privado/
